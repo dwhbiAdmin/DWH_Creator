@@ -12,7 +12,6 @@ class ConfigManager:
     DEFAULT_SUBDIRECTORIES = [
         "1_sources",
         "2_workbench", 
-        "3_templates",
         "4_artifacts",
         "9_archive"
     ]
@@ -20,7 +19,7 @@ class ConfigManager:
     # Default stage configuration
     DEFAULT_STAGES = [
         {
-            "stage_id": "s1", 
+            "stage_id": "s0", 
             "stage_name": "0_drop_zone", 
             "stage_color": "gray",
             "stage_technical_columns": "source_name;partition_field;created_timestamp;batch_id",
@@ -28,7 +27,7 @@ class ConfigManager:
             "stage_etl_default_templates": "source_to_drop_zone_etl.sql"
         },
         {
-            "stage_id": "s2", 
+            "stage_id": "s1", 
             "stage_name": "1_bronze", 
             "stage_color": "bronze",
             "stage_technical_columns": "source_name;partition_field;created_timestamp;batch_id;record_hash",
@@ -36,7 +35,7 @@ class ConfigManager:
             "stage_etl_default_templates": "drop_zone_to_bronze_etl.sql"
         },
         {
-            "stage_id": "s3", 
+            "stage_id": "s2", 
             "stage_name": "2_silver", 
             "stage_color": "silver",
             "stage_technical_columns": "created_timestamp;updated_timestamp;batch_id;is_active;effective_date;end_date",
@@ -44,7 +43,7 @@ class ConfigManager:
             "stage_etl_default_templates": "bronze_to_silver_etl.sql"
         },
         {
-            "stage_id": "s4", 
+            "stage_id": "s3", 
             "stage_name": "3_gold", 
             "stage_color": "gold",
             "stage_technical_columns": "created_timestamp;updated_timestamp;batch_id",
@@ -52,7 +51,7 @@ class ConfigManager:
             "stage_etl_default_templates": "silver_to_gold_etl.sql"
         },
         {
-            "stage_id": "s5", 
+            "stage_id": "s4", 
             "stage_name": "4_mart", 
             "stage_color": "blue",
             "stage_technical_columns": "created_timestamp;updated_timestamp",
@@ -60,7 +59,7 @@ class ConfigManager:
             "stage_etl_default_templates": "gold_to_mart_etl.sql"
         },
         {
-            "stage_id": "s6", 
+            "stage_id": "s5", 
             "stage_name": "5_PBI_Model", 
             "stage_color": "purple",
             "stage_technical_columns": "",
@@ -68,7 +67,7 @@ class ConfigManager:
             "stage_etl_default_templates": ""
         },
         {
-            "stage_id": "s7", 
+            "stage_id": "s6", 
             "stage_name": "6_PBI_Reports", 
             "stage_color": "green",
             "stage_technical_columns": "",

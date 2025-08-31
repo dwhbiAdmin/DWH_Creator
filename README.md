@@ -25,10 +25,15 @@ DWH_Creator/
 │   │   ├── file_utils.py          # File operations
 │   │   └── excel_utils.py         # Excel-specific utilities
 │   └── __init__.py
-├── templates/             # DDL/ETL template files
+├── templates/             # Global DDL/ETL template files (shared across all projects)
 ├── tests/                 # Unit tests
 ├── config/                # Configuration files
 ├── _DWH_Projects/         # Default location for created projects
+│   └── Project_<name>/    # Individual project structure:
+│       ├── 1_sources/     # Source files for import
+│       ├── 2_workbench/   # Excel workbook and metadata
+│       ├── 4_artifacts/   # Generated DDL/ETL scripts
+│       └── 9_archive/     # Archived versions
 ├── requirements.txt       # Python dependencies
 ├── main.py               # Application entry point
 └── README.md
