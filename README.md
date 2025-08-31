@@ -69,10 +69,49 @@ cd DWH_Creator
 pip install -r requirements.txt
 ```
 
-3. Run the application:
+3. Configure the application:
 ```bash
-python main.py --help
+# Copy the configuration template
+cp config/config.ini.template config/config.ini
+
+# Edit config/config.ini and add your OpenAI API key:
+# api_key = your_openai_api_key_here
 ```
+
+4. Run the application:
+```bash
+python main.py --console
+```
+
+## Configuration
+
+The application uses a configuration file `config/config.ini` for settings. 
+
+### Setup Configuration
+
+1. Copy the template: `cp config/config.ini.template config/config.ini`
+2. Edit `config/config.ini` with your settings:
+
+```ini
+[openai]
+# Your OpenAI API key for AI comment generation
+api_key = your_openai_api_key_here
+model = gpt-4
+
+[application]
+default_projects_folder = _DWH_Projects
+log_level = INFO
+```
+
+### Environment Variables
+
+You can also set configuration via environment variables:
+- `OPENAI_API_KEY` - OpenAI API key (overrides config file)
+
+### Security Note
+
+⚠️ **Never commit `config/config.ini` to version control!** 
+The file is automatically ignored by `.gitignore` to protect your API keys.
 
 ## Development Status
 

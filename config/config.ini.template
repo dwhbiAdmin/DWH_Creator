@@ -1,0 +1,30 @@
+# DWH Creator Configuration Template
+# ==================================
+# 
+# Copy this file to 'config.ini' and fill in your settings.
+# Keep config.ini secure and do not commit it to version control.
+
+[openai]
+# OpenAI API key for AI comment generation
+# Get your API key from: https://platform.openai.com/api-keys
+# You can also set this as environment variable: OPENAI_API_KEY
+api_key = YOUR_OPENAI_API_KEY_HERE
+
+# Model to use for AI generation (gpt-4, gpt-3.5-turbo)
+model = gpt-4
+
+[application]
+# Default project settings
+default_projects_folder = _DWH_Projects
+
+# Logging level (DEBUG, INFO, WARNING, ERROR)
+log_level = INFO
+
+[excel]
+# Excel file settings
+backup_on_save = true
+auto_width_columns = true
+
+[templates]
+# Template engine settings
+default_encoding = utf-8

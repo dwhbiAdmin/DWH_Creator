@@ -16,7 +16,9 @@ src_dir = current_dir.parent
 sys.path.insert(0, str(src_dir))
 
 from backend.project_manager import ProjectManager
+from backend.workbench_manager import WorkbenchManager
 from utils.logger import Logger
+from utils.app_config import AppConfig
 
 class ConsoleInterface:
     """
@@ -28,6 +30,9 @@ class ConsoleInterface:
         self.project_manager = ProjectManager()
         self.logger = Logger()
         self.current_project_path = None
+        self.workbench_manager = None
+        self.app_config = AppConfig()
+        self.openai_api_key = self.app_config.get_openai_api_key()
         
     def display_header(self):
         """Display application header."""
@@ -101,9 +106,12 @@ class ConsoleInterface:
                 print(f"✅ Project created successfully!")
                 print(f"📁 Project location: {project_path}")
                 self.current_project_path = project_path
+                # Initialize workbench manager for this project
+                self.workbench_manager = WorkbenchManager(project_path, self.openai_api_key)
                 
                 # Ask if user wants to open Excel workbook
-                open_excel = input("\n📊 Open Excel workbook now? (y/n): ").strip().lower()
+                print("\n⚠️  Note: If you open the Excel workbook, you'll need to close it before import operations")
+                open_excel = input("📊 Open Excel workbook now? (y/n): ").strip().lower()
                 if open_excel in ['y', 'yes']:
                     self.project_manager.open_excel_workbook(project_path)
                     
@@ -155,9 +163,12 @@ class ConsoleInterface:
             if self.project_manager.open_existing_project(project_path):
                 print("✅ Project opened successfully!")
                 self.current_project_path = project_path
+                # Initialize workbench manager for this project
+                self.workbench_manager = WorkbenchManager(project_path, self.openai_api_key)
                 
                 # Ask if user wants to open Excel workbook
-                open_excel = input("\n📊 Open Excel workbook? (y/n): ").strip().lower()
+                print("\n⚠️  Note: If you open the Excel workbook, you'll need to close it before import operations")
+                open_excel = input("📊 Open Excel workbook? (y/n): ").strip().lower()
                 if open_excel in ['y', 'yes']:
                     self.project_manager.open_excel_workbook(project_path)
             else:
@@ -193,14 +204,181 @@ class ConsoleInterface:
             elif choice == 2:
                 self.handle_open_project()
             elif choice == 3 and self.current_project_path:
-                print("\n🚧 Workbench Operations - Coming soon!")
-                input("Press Enter to continue...")
+                self.handle_workbench_operations()
             elif choice == 4 and self.current_project_path:
                 print("\n🚧 Generate Artifacts - Coming soon!")
                 input("Press Enter to continue...")
             elif choice == 5 and self.current_project_path:
                 print("\n🚧 Documentation - Coming soon!")
                 input("Press Enter to continue...")
+                
+    def handle_workbench_operations(self):
+        """Handle workbench operations submenu."""
+        if not self.workbench_manager:
+            print("❌ Workbench manager not initialized")
+            input("Press Enter to continue...")
+            return
+            
+        while True:
+            print(f"\n🔧 Workbench Operations")
+            print("-" * 30)
+            print("1. Open Stages Sheet")
+            print("2. Open Artifacts Sheet") 
+            print("3. Open Columns Sheet")
+            print("4. Import/Assign from 1_sources")
+            print("5. Generate AI Comments (Artifacts)")
+            print("6. Generate AI Comments (Columns)")
+            print("7. Cascade Operations")
+            print("8. Sync & Validate")
+            print("9. Save Workbook")
+            print("0. Back to Main Menu")
+            print("-" * 30)
+            
+            try:
+                choice = int(input("Enter your choice (0-9): "))
+                
+                if choice == 0:
+                    break
+                elif choice == 1:
+                    self._handle_open_stages()
+                elif choice == 2:
+                    self._handle_open_artifacts()
+                elif choice == 3:
+                    self._handle_open_columns()
+                elif choice == 4:
+                    self._handle_import_assign()
+                elif choice == 5:
+                    self._handle_artifact_ai_comments()
+                elif choice == 6:
+                    self._handle_column_ai_comments()
+                elif choice == 7:
+                    self._handle_cascade_operations()
+                elif choice == 8:
+                    self._handle_sync_validate()
+                elif choice == 9:
+                    self._handle_save_workbook()
+                else:
+                    print("❌ Please enter a valid number (0-9)")
+                    
+            except ValueError:
+                print("❌ Please enter a valid number")
+            except KeyboardInterrupt:
+                print("\n\n👋 Goodbye!")
+                break
+                
+    def _handle_open_stages(self):
+        """Handle opening stages sheet."""
+        print("\n📊 Opening Stages Sheet...")
+        if self.workbench_manager.open_stages_sheet():
+            print("✅ Stages sheet opened successfully!")
+        else:
+            print("❌ Failed to open stages sheet")
+        input("Press Enter to continue...")
+        
+    def _handle_open_artifacts(self):
+        """Handle opening artifacts sheet."""
+        print("\n📊 Opening Artifacts Sheet...")
+        if self.workbench_manager.open_artifacts_sheet():
+            print("✅ Artifacts sheet opened successfully!")
+        else:
+            print("❌ Failed to open artifacts sheet")
+        input("Press Enter to continue...")
+        
+    def _handle_open_columns(self):
+        """Handle opening columns sheet."""
+        print("\n📊 Opening Columns Sheet...")
+        if self.workbench_manager.open_columns_sheet():
+            print("✅ Columns sheet opened successfully!")
+        else:
+            print("❌ Failed to open columns sheet")
+        input("Press Enter to continue...")
+        
+    def _handle_import_assign(self):
+        """Handle import/assign operation."""
+        print("\n📥 Import/Assign from 1_sources")
+        print("-" * 35)
+        
+        sources_path = os.path.join(self.current_project_path, "1_sources")
+        if not os.path.exists(sources_path):
+            print(f"❌ Sources folder not found: {sources_path}")
+            input("Press Enter to continue...")
+            return
+        
+        # Check for CSV files
+        import glob
+        csv_files = glob.glob(os.path.join(sources_path, "*.csv"))
+        if not csv_files:
+            print(f"❌ No CSV files found in {sources_path}")
+            print("Please add CSV files to the 1_sources folder first")
+            input("Press Enter to continue...")
+            return
+        
+        print(f"📁 Found {len(csv_files)} CSV files:")
+        for csv_file in csv_files:
+            print(f"  - {os.path.basename(csv_file)}")
+        
+        print("\n⚠️  Important: Make sure the Excel workbook is closed before proceeding")
+        proceed = input("🔄 Proceed with import/assign? (y/n): ").strip().lower()
+        if proceed in ['y', 'yes']:
+            print("\n⏳ Processing CSV files...")
+            if self.workbench_manager.import_assign_columns():
+                print("✅ Import/Assign completed successfully!")
+            else:
+                print("❌ Import/Assign failed")
+                print("💡 Tip: If you see file locking errors, close Excel and try again")
+        
+        input("Press Enter to continue...")
+    
+    def _handle_artifact_ai_comments(self):
+        """Handle AI comment generation for artifacts."""
+        print("\n🤖 Generate AI Comments for Artifacts")
+        print("-" * 40)
+        
+        proceed = input("🔄 Generate AI comments for all artifacts? (y/n): ").strip().lower()
+        if proceed in ['y', 'yes']:
+            print("\n⏳ Generating AI comments...")
+            if self.workbench_manager.generate_ai_comments():
+                print("✅ AI comments generated successfully!")
+            else:
+                print("❌ Failed to generate AI comments")
+        
+        input("Press Enter to continue...")
+    
+    def _handle_column_ai_comments(self):
+        """Handle AI comment generation for columns."""
+        print("\n🤖 Generate AI Comments for Columns")
+        print("-" * 40)
+        
+        proceed = input("🔄 Generate AI comments for all columns? (y/n): ").strip().lower()
+        if proceed in ['y', 'yes']:
+            print("\n⏳ Generating AI comments...")
+            if self.workbench_manager.generate_ai_comments():
+                print("✅ AI comments generated successfully!")
+            else:
+                print("❌ Failed to generate AI comments")
+        
+        input("Press Enter to continue...")
+    
+    def _handle_cascade_operations(self):
+        """Handle cascade operations."""
+        print("\n🔄 Cascade Operations")
+        print("-" * 25)
+        print("🚧 Cascade operations coming soon!")
+        input("Press Enter to continue...")
+    
+    def _handle_sync_validate(self):
+        """Handle sync and validate operations."""
+        print("\n🔍 Sync & Validate")
+        print("-" * 20)
+        print("🚧 Sync & validate operations coming soon!")
+        input("Press Enter to continue...")
+    
+    def _handle_save_workbook(self):
+        """Handle saving the workbook."""
+        print("\n💾 Save Workbook")
+        print("-" * 17)
+        print("✅ Workbook saved automatically with each operation")
+        input("Press Enter to continue...")
                 
 if __name__ == "__main__":
     console = ConsoleInterface()

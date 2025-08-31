@@ -138,7 +138,48 @@ class ExcelUtils:
             bool: True if write successful
         """
         try:
-            # Read existing workbook if it exists
+            # If file exists and is locked, try to close it via COM, update, then reopen
+            if os.path.exists(file_path) and ExcelUtils._is_file_locked(file_path):
+                print(f"Excel file appears to be open: {file_path}")
+                try:
+                    import win32com.client as win32
+                    excel = win32.Dispatch("Excel.Application")
+                    wb = None
+                    for book in excel.Workbooks:
+                        try:
+                            if os.path.abspath(book.FullName).lower() == os.path.abspath(file_path).lower():
+                                wb = book
+                                break
+                        except Exception:
+                            continue
+                    if wb:
+                        print("Closing workbook in Excel via COM...")
+                        wb.Close(SaveChanges=True)
+                        # Wait a moment for file to unlock
+                        import time
+                        time.sleep(1)
+                        # Confirm file is unlocked
+                        if ExcelUtils._is_file_locked(file_path):
+                            print("File still locked after COM close. Please close Excel manually.")
+                            return False
+                        print("Workbook closed. Proceeding with update...")
+                        # Now update as normal
+                        result = ExcelUtils.write_sheet_data(file_path, sheet_name, data)
+                        # Reopen workbook in Excel for user
+                        print("Reopening workbook in Excel...")
+                        excel.Workbooks.Open(os.path.abspath(file_path))
+                        return result
+                    else:
+                        print("Workbook not found in running Excel. Please close Excel manually.")
+                        return False
+                except ImportError:
+                    print("pywin32 not installed. Please close Excel manually and try again.")
+                    return False
+                except Exception as e:
+                    print(f"Error using COM to close Excel: {e}")
+                    return False
+
+            # Normal path when file not locked or doesn't exist
             if os.path.exists(file_path):
                 with pd.ExcelWriter(file_path, mode='a', if_sheet_exists='replace', engine='openpyxl') as writer:
                     data.to_excel(writer, sheet_name=sheet_name, index=False)
@@ -146,9 +187,14 @@ class ExcelUtils:
                 # Create new workbook
                 with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
                     data.to_excel(writer, sheet_name=sheet_name, index=False)
-                    
+
             return True
-            
+
+        except PermissionError:
+            print(f"Error: Permission denied writing to Excel file.")
+            print(f"The file may be open in another application: {file_path}")
+            print(f"Please close the file and try again.")
+            return False
         except Exception as e:
             print(f"Error writing Excel sheet: {str(e)}")
             return False
@@ -206,3 +252,119 @@ class ExcelUtils:
         except Exception as e:
             print(f"Error getting sheet names: {str(e)}")
             return []
+
+    @staticmethod
+    def _is_file_locked(file_path: str) -> bool:
+        """
+        Check if file is locked (open in another application).
+        
+        Args:
+            file_path: Path to file to check
+            
+        Returns:
+            bool: True if file is locked
+        """
+        try:
+            # Try to open file in write mode
+            with open(file_path, 'r+b'):
+                pass
+            return False
+        except (IOError, OSError, PermissionError):
+            return True
+
+    @staticmethod
+    def _write_via_com(file_path: str, sheet_name: str, data: pd.DataFrame) -> bool:
+        """
+        Write data to an open Excel workbook using COM (pywin32). This allows updating the workbook
+        even when Excel has the file open.
+        """
+        try:
+            # Import locally to avoid hard dependency at module import time
+            import win32com.client as win32
+
+            excel = win32.Dispatch("Excel.Application")
+
+            # Try to find an already opened workbook
+            wb = None
+            for book in excel.Workbooks:
+                try:
+                    if os.path.abspath(book.FullName).lower() == os.path.abspath(file_path).lower():
+                        wb = book
+                        break
+                except Exception:
+                    continue
+
+            if wb is None:
+                # Open without ReadOnly to allow saving; ignore alerts
+                wb = excel.Workbooks.Open(os.path.abspath(file_path), ReadOnly=False)
+
+            # Try to get the worksheet; if it doesn't exist, add it
+            try:
+                ws = wb.Worksheets(sheet_name)
+            except Exception:
+                ws = wb.Worksheets.Add()
+                ws.Name = sheet_name
+
+            # Prepare data as a 2D list (headers + rows)
+            headers = list(data.columns)
+            rows = data.fillna("").values.tolist()
+            table = [headers] + rows
+
+            # Determine target range size
+            n_rows = len(table)
+            n_cols = len(headers)
+
+            # Write values starting at A1
+            start_cell = ws.Range("A1")
+            end_cell = ws.Cells(n_rows, n_cols)
+            write_range = ws.Range(start_cell, end_cell)
+
+            # COM accepts a tuple of tuples
+            write_range.Value = tuple(tuple(row) for row in table)
+
+            # Save workbook via COM
+            wb.Save()
+            return True
+        except ModuleNotFoundError:
+            raise
+        except Exception as e:
+            # Re-raise to allow fallback to xlwings
+            raise
+
+    @staticmethod
+    def _write_via_xlwings(file_path: str, sheet_name: str, data: pd.DataFrame) -> bool:
+        """
+        Write data to an open Excel workbook using xlwings.
+        """
+        try:
+            import xlwings as xw
+
+            # Try to attach to active app if present
+            app = None
+            if xw.apps:
+                app = xw.apps.active
+            if app is None:
+                app = xw.App(visible=False)
+
+            # Try to connect to the workbook if open, otherwise open it
+            try:
+                book = xw.Book(os.path.abspath(file_path))
+            except Exception:
+                book = app.books.open(os.path.abspath(file_path))
+
+            # Ensure sheet exists
+            try:
+                sheet = book.sheets[sheet_name]
+            except Exception:
+                sheet = book.sheets.add(sheet_name)
+
+            # Write dataframe (xlwings handles headers)
+            sheet.range("A1").options(index=False).value = data
+
+            # Save workbook
+            book.save()
+            return True
+        except ModuleNotFoundError:
+            raise
+        except Exception as e:
+            raise

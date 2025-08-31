@@ -1,0 +1,4 @@
+product_id,product_name,category,price,stock_quantity,supplier_id
+P001,Laptop Computer,Electronics,999.99,50,SUP001
+P002,Office Chair,Furniture,149.99,25,SUP002
+P003,Coffee Maker,Appliances,79.99,100,SUP003
