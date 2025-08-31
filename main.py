@@ -57,10 +57,20 @@ def main():
     
     if args.console:
         print("Starting in console mode...")
-        # TODO: Initialize console interface
+        try:
+            from src.frontend.console_interface import ConsoleInterface
+            console = ConsoleInterface()
+            console.run()
+        except ImportError as e:
+            print(f"❌ Error importing console interface: {e}")
+            return 1
+        except Exception as e:
+            print(f"❌ Error running console interface: {e}")
+            return 1
     elif args.gui:
         print("Starting GUI interface...")
-        # TODO: Initialize GUI interface
+        print("🚧 GUI interface not yet implemented")
+        return 1
     else:
         print("Please specify --console or --gui mode")
         print("Use --help for more information")
