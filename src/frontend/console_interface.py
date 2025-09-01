@@ -334,13 +334,20 @@ class ConsoleInterface:
         print("\n🤖 Generate AI Comments for Artifacts")
         print("-" * 40)
         
+        if not self.workbench_manager.ai_generator.is_available():
+            print("❌ AI comment generation not available")
+            print("💡 Please ensure OpenAI API key is configured in config/config.ini")
+            input("Press Enter to continue...")
+            return
+        
         proceed = input("🔄 Generate AI comments for all artifacts? (y/n): ").strip().lower()
         if proceed in ['y', 'yes']:
-            print("\n⏳ Generating AI comments...")
-            if self.workbench_manager.generate_ai_comments():
-                print("✅ AI comments generated successfully!")
+            print("\n⏳ Generating AI comments for artifacts...")
+            if self.workbench_manager.generate_artifact_ai_comments():
+                print("✅ Artifact AI comments generated successfully!")
             else:
-                print("❌ Failed to generate AI comments")
+                print("❌ Failed to generate artifact AI comments")
+                print("💡 Check console output for details")
         
         input("Press Enter to continue...")
     
@@ -349,13 +356,20 @@ class ConsoleInterface:
         print("\n🤖 Generate AI Comments for Columns")
         print("-" * 40)
         
+        if not self.workbench_manager.ai_generator.is_available():
+            print("❌ AI comment generation not available")
+            print("💡 Please ensure OpenAI API key is configured in config/config.ini")
+            input("Press Enter to continue...")
+            return
+        
         proceed = input("🔄 Generate AI comments for all columns? (y/n): ").strip().lower()
         if proceed in ['y', 'yes']:
-            print("\n⏳ Generating AI comments...")
-            if self.workbench_manager.generate_ai_comments():
-                print("✅ AI comments generated successfully!")
+            print("\n⏳ Generating AI comments for columns...")
+            if self.workbench_manager.generate_column_ai_comments():
+                print("✅ Column AI comments generated successfully!")
             else:
-                print("❌ Failed to generate AI comments")
+                print("❌ Failed to generate column AI comments")
+                print("💡 Check console output for details")
         
         input("Press Enter to continue...")
     
