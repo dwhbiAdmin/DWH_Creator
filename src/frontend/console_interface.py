@@ -346,7 +346,7 @@ class ConsoleInterface:
         print("\n🤖 Generate AI Comments for Artifacts")
         print("-" * 40)
         
-        if not self.workbench_manager.ai_generator.is_available():
+        if not self.workbench_manager.is_ai_available():
             print("❌ AI comment generation not available")
             print("💡 Please ensure OpenAI API key is configured in config/config.ini")
             input("Press Enter to continue...")
@@ -368,7 +368,7 @@ class ConsoleInterface:
         print("\n🤖 Generate AI Comments for Columns")
         print("-" * 40)
         
-        if not self.workbench_manager.ai_generator.is_available():
+        if not self.workbench_manager.is_ai_available():
             print("❌ AI comment generation not available")
             print("💡 Please ensure OpenAI API key is configured in config/config.ini")
             input("Press Enter to continue...")
