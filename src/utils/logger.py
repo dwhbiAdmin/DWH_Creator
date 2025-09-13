@@ -5,14 +5,19 @@ Application Logger
 Centralized logging for the DWH Creator application.
 """
 
+# ANCHOR: Imports and Dependencies
+
 import logging
 import sys
 from pathlib import Path
 from datetime import datetime
 
+# ANCHOR: Logger Class Definition
+
 class Logger:
     """Application logging manager."""
     
+    # ANCHOR: Initialization and Setup
     def __init__(self, log_level: str = "INFO"):
         """Initialize logger with specified level."""
         self.logger = logging.getLogger("DWH_Creator")
@@ -39,6 +44,7 @@ class Logger:
         # Add handler to logger
         self.logger.addHandler(console_handler)
     
+    # ANCHOR: Logging Methods
     def info(self, message: str):
         """Log info message."""
         self.logger.info(message)

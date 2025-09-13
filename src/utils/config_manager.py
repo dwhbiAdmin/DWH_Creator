@@ -5,9 +5,12 @@ Configuration Manager
 Handles application configuration, settings, and constants.
 """
 
+# ANCHOR: ConfigManager Class Definition
+
 class ConfigManager:
     """Manages application configuration and settings."""
     
+    # ANCHOR: Default Configuration Constants
     # Default project structure
     DEFAULT_SUBDIRECTORIES = [
         "1_sources",

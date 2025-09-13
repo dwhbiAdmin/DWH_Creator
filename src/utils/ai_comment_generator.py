@@ -6,15 +6,20 @@ Handles AI-powered comment generation for artifacts and columns using OpenAI API
 Adapted from previous implementation for DWH Creator specific needs.
 """
 
+# ANCHOR: Imports and Dependencies
+
 from openai import OpenAI
 import os
 from typing import Dict, List, Optional
 from .app_config import AppConfig
 
+# ANCHOR: AICommentGenerator Class Definition
+
 
 class AICommentGenerator:
     """Handles AI-powered comment generation for artifacts and columns."""
     
+    # ANCHOR: Initialization and Setup
     def __init__(self, api_key: str = None):
         """
         Initialize the AI comment generator.

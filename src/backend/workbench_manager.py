@@ -13,6 +13,8 @@ Key responsibilities:
 - Sync and validation operations
 """
 
+# ANCHOR: Imports and Dependencies
+
 import os
 import subprocess
 import pandas as pd
@@ -31,11 +33,14 @@ from utils.ai_comment_generator import AICommentGenerator
 from utils.logger import Logger
 from utils.config_manager import ConfigManager
 
+# ANCHOR: WorkbenchManager Class Definition
+
 class WorkbenchManager:
     """
     Manages Excel workbook operations and sheet manipulations.
     """
     
+    # ANCHOR: Initialization and Setup Methods
     def __init__(self, project_path: str = None, openai_api_key: str = None):
         """
         Initialize the Workbench Manager.
@@ -71,7 +76,8 @@ class WorkbenchManager:
             self.logger.info(f"Found workbook: {self.workbook_path}")
         else:
             self.logger.error(f"No workbook found in {workbench_dir}")
-    
+
+    # ANCHOR: Sheet Opening Methods
     def open_stages_sheet(self) -> bool:
         """Open the Stages sheet for editing."""
         if not self.workbook_path:
@@ -98,7 +104,8 @@ class WorkbenchManager:
     def open_columns_sheet(self) -> bool:
         """Open the Columns sheet for editing."""
         return self.open_stages_sheet()  # Same operation - opens Excel
-    
+
+    # ANCHOR: Import and CSV Processing Methods
     def import_assign_columns(self, source_folder: str = None) -> bool:
         """
         Import and assign columns from source files.
@@ -182,7 +189,8 @@ class WorkbenchManager:
         except Exception as e:
             self.logger.error(f"Failed to import/assign columns: {str(e)}")
             return False
-    
+
+    # ANCHOR: CSV Analysis Helper Methods
     def _get_csv_files(self, source_folder: str) -> List[str]:
         """Get all CSV files from source folder."""
         csv_pattern = os.path.join(source_folder, "*.csv")
@@ -250,7 +258,8 @@ class WorkbenchManager:
             return matches.iloc[0]['Artifact ID']
         
         return None
-    
+
+    # ANCHOR: Workbook Data Management Methods
     def _add_columns_to_workbook(self, artifact_id: str, columns_info: List[Dict]) -> bool:
         """Add column information to the columns sheet."""
         try:
@@ -294,7 +303,8 @@ class WorkbenchManager:
         except Exception as e:
             self.logger.error(f"Error adding columns to workbook: {str(e)}")
             return False
-    
+
+    # ANCHOR: AI Comment Generation Methods
     def generate_ai_comments(self) -> bool:
         """Generate AI comments for artifacts and columns."""
         if not self.ai_generator.is_available():
@@ -345,7 +355,8 @@ class WorkbenchManager:
         except Exception as e:
             self.logger.error(f"Failed to generate column AI comments: {str(e)}")
             return False
-    
+
+    # ANCHOR: Private AI Generation Helper Methods
     def _generate_artifact_comments(self) -> bool:
         """Generate AI comments for artifacts."""
         try:
@@ -447,7 +458,8 @@ class WorkbenchManager:
         except Exception as e:
             self.logger.error(f"Error generating column comments: {str(e)}")
             return False
-    
+
+    # ANCHOR: Cascade and Sync Operations
     def cascade_columns(self) -> bool:
         """Perform deterministic column filling based on relations."""
         # TODO: Implement cascade logic based on specification
@@ -464,7 +476,8 @@ class WorkbenchManager:
         # TODO: Implement sync and validation logic
         self.logger.info("Sync and validation - implementation pending")
         return {"status": "pending"}
-    
+
+    # ANCHOR: Workbook Management Methods
     def save_workbook(self) -> bool:
         """Save the current workbook version."""
         try:

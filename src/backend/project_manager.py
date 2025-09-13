@@ -11,6 +11,8 @@ Key responsibilities:
 - Setting up default Excel workbook with proper sheets and headers
 """
 
+# ANCHOR: Imports and Dependencies
+
 import os
 import subprocess
 from pathlib import Path
@@ -27,11 +29,14 @@ from utils.file_utils import FileUtils
 from utils.excel_utils import ExcelUtils
 from utils.logger import Logger
 
+# ANCHOR: ProjectManager Class Definition
+
 class ProjectManager:
     """
     Manages DWH Creator projects including creation, opening, and basic setup.
     """
     
+    # ANCHOR: Initialization and Configuration
     def __init__(self):
         """Initialize the Project Manager."""
         self.config = ConfigManager()
@@ -51,6 +56,7 @@ class ProjectManager:
         dwh_creator_root = current_file.parent.parent.parent
         return str(dwh_creator_root / "_DWH_Projects")
     
+    # ANCHOR: Project Creation Methods
     def create_new_project(self, project_name: str, base_path: str = None) -> str:
         """
         Create a new DWH Creator project with folder structure and Excel workbook.
@@ -112,6 +118,7 @@ class ProjectManager:
             self.logger.error(f"Failed to create project: {str(e)}")
             raise
     
+    # ANCHOR: Excel Workbook Creation Methods
     def _create_excel_workbook(self, workbook_path: str, project_name: str):
         """
         Create the Excel workbook with the three main sheets and default data.
@@ -137,6 +144,7 @@ class ProjectManager:
         else:
             raise Exception(f"Failed to create Excel workbook: {workbook_path}")
     
+    # ANCHOR: Project Management Methods
     def open_existing_project(self, project_path: str) -> bool:
         """
         Open an existing DWH Creator project.
@@ -164,6 +172,7 @@ class ProjectManager:
             self.logger.error(f"Failed to open project: {str(e)}")
             return False
     
+    # ANCHOR: Project Validation and Utility Methods
     def _validate_project_structure(self, project_path: str) -> bool:
         """
         Validate that the project has the expected structure.
@@ -212,6 +221,7 @@ class ProjectManager:
                     
         return projects
     
+    # ANCHOR: Excel and External Integration Methods
     def open_excel_workbook(self, project_path: str) -> bool:
         """
         Open the Excel workbook for the project.
@@ -245,6 +255,7 @@ class ProjectManager:
             self.logger.error(f"Failed to open Excel workbook: {str(e)}")
             return False
     
+    # ANCHOR: Git Integration Methods
     def setup_git_integration(self, project_path: str, email: str) -> bool:
         """
         Setup GitHub integration for the project.

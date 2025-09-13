@@ -6,6 +6,8 @@ Provides a command-line interface for the DWH Creator application.
 Implements the main menu structure and user interaction flow.
 """
 
+# ANCHOR: Imports and Dependencies
+
 import os
 import sys
 from pathlib import Path
@@ -20,11 +22,14 @@ from backend.workbench_manager import WorkbenchManager
 from utils.logger import Logger
 from utils.app_config import AppConfig
 
+# ANCHOR: ConsoleInterface Class Definition
+
 class ConsoleInterface:
     """
     Console-based user interface for DWH Creator.
     """
     
+    # ANCHOR: Initialization and Setup
     def __init__(self):
         """Initialize the console interface."""
         self.project_manager = ProjectManager()
@@ -34,6 +39,7 @@ class ConsoleInterface:
         self.app_config = AppConfig()
         self.openai_api_key = self.app_config.get_openai_api_key()
         
+    # ANCHOR: Display and Menu Methods
     def display_header(self):
         """Display application header."""
         print("\n" + "=" * 60)
@@ -77,6 +83,7 @@ class ConsoleInterface:
                 print("\n👋 Goodbye!")
                 sys.exit(0)
                 
+    # ANCHOR: Project Management Handlers
     def handle_new_project(self):
         """Handle new project creation."""
         print("\n🆕 Create New Project")
@@ -176,6 +183,7 @@ class ConsoleInterface:
         except Exception as e:
             print(f"❌ Error opening project: {str(e)}")
             
+    # ANCHOR: Status and Utility Methods
     def show_project_status(self):
         """Show current project status."""
         if self.current_project_path:
@@ -184,6 +192,7 @@ class ConsoleInterface:
         else:
             print("\n❌ No project currently open")
             
+    # ANCHOR: Main Application Loop
     def run(self):
         """Main application loop."""
         self.display_header()
@@ -212,6 +221,7 @@ class ConsoleInterface:
                 print("\n🚧 Documentation - Coming soon!")
                 input("Press Enter to continue...")
                 
+    # ANCHOR: Workbench Operations Handler
     def handle_workbench_operations(self):
         """Handle workbench operations submenu."""
         if not self.workbench_manager:
@@ -266,6 +276,7 @@ class ConsoleInterface:
                 print("\n\n👋 Goodbye!")
                 break
                 
+    # ANCHOR: Workbench Operation Helper Methods
     def _handle_open_stages(self):
         """Handle opening stages sheet."""
         print("\n📊 Opening Stages Sheet...")
@@ -329,6 +340,7 @@ class ConsoleInterface:
         
         input("Press Enter to continue...")
     
+    # ANCHOR: AI Comment Generation Handlers
     def _handle_artifact_ai_comments(self):
         """Handle AI comment generation for artifacts."""
         print("\n🤖 Generate AI Comments for Artifacts")
@@ -373,6 +385,7 @@ class ConsoleInterface:
         
         input("Press Enter to continue...")
     
+    # ANCHOR: Additional Operations Handlers
     def _handle_cascade_operations(self):
         """Handle cascade operations."""
         print("\n🔄 Cascade Operations")
@@ -394,6 +407,7 @@ class ConsoleInterface:
         print("✅ Workbook saved automatically with each operation")
         input("Press Enter to continue...")
                 
+# ANCHOR: Main Application Entry Point
 if __name__ == "__main__":
     console = ConsoleInterface()
     console.run()

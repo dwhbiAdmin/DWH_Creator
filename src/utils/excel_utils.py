@@ -5,15 +5,20 @@ Excel Utilities
 Excel-specific operations and helpers.
 """
 
+# ANCHOR: Imports and Dependencies
+
 import pandas as pd
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.worksheet.table import Table, TableStyleInfo
 import os
 
+# ANCHOR: ExcelUtils Class Definition
+
 class ExcelUtils:
     """Excel workbook and worksheet utility functions."""
     
+    # ANCHOR: Workbook Creation Methods
     @staticmethod
     def create_workbook_with_sheets(file_path: str, sheets_config: dict) -> bool:
         """
