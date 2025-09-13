@@ -283,6 +283,7 @@ class WorkbenchManager:
                     'Order': col_info['order'],
                     'Data Type': col_info['data_type'],
                     'Column Comment': '',  # Will be filled by AI
+                    'Readable Column Name': '',  # Will be filled by AI
                     'Column Group': '',    # Will be filled by cascade
                     'Simple Calculation': ''
                 }
@@ -331,6 +332,14 @@ class WorkbenchManager:
             return False
         
         return self.ai_workbench.generate_column_comments()
+
+    def generate_readable_column_names(self) -> bool:
+        """Generate human-readable column names for all columns."""
+        if not self.ai_workbench:
+            self.logger.error("AI workbench manager not initialized")
+            return False
+        
+        return self.ai_workbench.generate_readable_column_names()
 
     def get_ai_comment_statistics(self) -> dict:
         """Get AI comment coverage statistics."""

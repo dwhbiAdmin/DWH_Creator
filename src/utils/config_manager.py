@@ -159,6 +159,7 @@ class ConfigManager:
             "Order",
             "Data Type",
             "Column Comment",
+            "Readable Column Name",
             "Column Group",
             "Simple Calculation"
         ]

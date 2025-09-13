@@ -165,21 +165,30 @@ class AICommentGenerator:
         
         try:
             prompt = f"""
-            You are a business analyst. Convert this technical database column name into a human-readable business term (max 50 characters):
+            Convert this technical database column name into a business-friendly snake_case name for data warehouse gold layer:
             
             Technical Name: {column_name}
             Data Type: {data_type}
             
-            Create a clear, business-friendly name that non-technical users would understand.
-            Use proper capitalization and spacing.
-            Avoid technical jargon and abbreviations.
+            Rules:
+            - Use snake_case (lowercase with underscores)
+            - Keep "id" as "id", never use "identifier"
+            - Make business-friendly but concise
+            - Avoid technical jargon and cryptic abbreviations
+            - Maximum 50 characters
+            - Return ONLY the column name, no prefixes or explanations
             
             Examples:
-            - cust_id → "Customer ID"
-            - order_dt → "Order Date"
-            - total_amt → "Total Amount"
-            - prod_cat_cd → "Product Category"
-            - created_ts → "Created Date"
+            - cust_id → customer_id
+            - order_dt → order_date
+            - total_amt → total_amount
+            - prod_cat_cd → product_category_code
+            - created_ts → created_timestamp
+            - CUST_FIRST_NM → customer_first_name
+            - ORD_STS_CD → order_status_code
+            - SALES_AMT_USD → sales_amount_usd
+            - emp_id → employee_id
+            - acct_id → account_id
             """
             
             response = self.client.chat.completions.create(
@@ -190,8 +199,36 @@ class AICommentGenerator:
             )
             
             readable_name = response.choices[0].message.content.strip()
-            # Remove quotes if AI added them
+            # Clean up the response - remove quotes, prefixes, and extra text
             readable_name = readable_name.strip('"\'')
+            
+            # Remove common AI response prefixes and unwanted text
+            prefixes_to_remove = [
+                "Business-Friendly Name:", 
+                "Business Name:", 
+                "Readable Name:",
+                "Column Name:",
+                "Name:",
+                "Business-Friendly Name",
+                "→",
+                "->",
+                "Output:",
+                "Result:"
+            ]
+            
+            for prefix in prefixes_to_remove:
+                if readable_name.startswith(prefix):
+                    readable_name = readable_name[len(prefix):].strip()
+                    break
+            
+            # Remove quotes and extra characters again after prefix removal
+            readable_name = readable_name.strip('"\'()[]{}')
+            
+            # Ensure it follows snake_case and replace "identifier" with "id"
+            readable_name = readable_name.lower().replace(" ", "_")
+            readable_name = readable_name.replace("identifier", "id")
+            readable_name = readable_name.replace("_id_", "_id")  # Avoid double id
+            
             return readable_name[:50]  # Limit length
             
         except Exception as e:

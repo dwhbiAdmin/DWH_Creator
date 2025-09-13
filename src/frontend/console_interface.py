@@ -238,14 +238,15 @@ class ConsoleInterface:
             print("4. Import/Assign from 1_sources")
             print("5. Generate AI Comments (Artifacts)")
             print("6. Generate AI Comments (Columns)")
-            print("7. Cascade Operations")
-            print("8. Sync & Validate")
-            print("9. Save Workbook")
+            print("7. Generate Readable Column Names")
+            print("8. Cascade Operations")
+            print("9. Sync & Validate")
+            print("10. Save Workbook")
             print("0. Back to Main Menu")
             print("-" * 30)
             
             try:
-                choice = int(input("Enter your choice (0-9): "))
+                choice = int(input("Enter your choice (0-10): "))
                 
                 if choice == 0:
                     break
@@ -262,13 +263,15 @@ class ConsoleInterface:
                 elif choice == 6:
                     self._handle_column_ai_comments()
                 elif choice == 7:
-                    self._handle_cascade_operations()
+                    self._handle_readable_column_names()
                 elif choice == 8:
-                    self._handle_sync_validate()
+                    self._handle_cascade_operations()
                 elif choice == 9:
+                    self._handle_sync_validate()
+                elif choice == 10:
                     self._handle_save_workbook()
                 else:
-                    print("❌ Please enter a valid number (0-9)")
+                    print("❌ Please enter a valid number (0-10)")
                     
             except ValueError:
                 print("❌ Please enter a valid number")
@@ -381,6 +384,28 @@ class ConsoleInterface:
                 print("✅ Column AI comments generated successfully!")
             else:
                 print("❌ Failed to generate column AI comments")
+                print("💡 Check console output for details")
+        
+        input("Press Enter to continue...")
+    
+    def _handle_readable_column_names(self):
+        """Handle readable column names generation."""
+        print("\n🏷️  Generate Readable Column Names")
+        print("-" * 40)
+        
+        if not self.workbench_manager.is_ai_available():
+            print("❌ AI readable name generation not available")
+            print("💡 Please ensure OpenAI API key is configured in config/config.ini")
+            input("Press Enter to continue...")
+            return
+        
+        proceed = input("🔄 Generate readable names for all columns? (y/n): ").strip().lower()
+        if proceed in ['y', 'yes']:
+            print("\n⏳ Generating readable column names...")
+            if self.workbench_manager.generate_readable_column_names():
+                print("✅ Readable column names generated successfully!")
+            else:
+                print("❌ Failed to generate readable column names")
                 print("💡 Check console output for details")
         
         input("Press Enter to continue...")
