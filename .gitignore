@@ -135,3 +135,18 @@ secrets.json
 # Logs
 logs/
 *.log
+
+# Excel and Office temporary files
+~$*
+~*.tmp
+*.tmp
+*.bak
+*~
+.xlsx#
+.docx#
+.pptx#
+
+# Project-specific temporary files
+_DWH_Projects/*/2_workbench/~$*
+config/~$*
+templates/~$*
