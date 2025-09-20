@@ -99,17 +99,17 @@ class AIWorkbenchManager:
             return False
 
     def generate_readable_column_names(self) -> bool:
-        """Generate human-readable column names for all columns."""
+        """Generate business-friendly column names for all columns."""
         if not self.is_ai_available():
-            self.logger.warning("AI readable name generation not available - no OpenAI API key")
+            self.logger.warning("AI business name generation not available - no OpenAI API key")
             return False
         
         try:
-            self.logger.info("Generating readable column names...")
+            self.logger.info("Generating business column names...")
             return self._generate_readable_column_names()
             
         except Exception as e:
-            self.logger.error(f"Failed to generate readable column names: {str(e)}")
+            self.logger.error(f"Failed to generate business column names: {str(e)}")
             return False
 
     # ANCHOR: Private AI Generation Helper Methods
@@ -216,61 +216,61 @@ class AIWorkbenchManager:
             return False
 
     def _generate_readable_column_names(self) -> bool:
-        """Generate human-readable column names for columns."""
+        """Generate business-friendly column names for columns."""
         try:
             columns_df = self.excel_utils.read_sheet_data(self.workbook_path, "Columns")
             if columns_df.empty:
-                self.logger.info("No columns found to generate readable names for")
+                self.logger.info("No columns found to generate business names for")
                 return True
             
-            # Count columns needing readable names
+            # Count columns needing business names
             columns_needing_names = []
             for idx, row in columns_df.iterrows():
-                if pd.isna(row.get('Readable Column Name', '')) or row.get('Readable Column Name', '') == '':
+                if pd.isna(row.get('Column Business Name', '')) or row.get('Column Business Name', '') == '':
                     column_name = row.get('Column Name', '')
                     data_type = row.get('Data Type', '')
                     if column_name:
                         columns_needing_names.append((idx, column_name, data_type))
             
             if not columns_needing_names:
-                self.logger.info("All columns already have readable names")
+                self.logger.info("All columns already have business names")
                 return True
             
-            self.logger.info(f"Generating readable names for {len(columns_needing_names)} columns...")
+            self.logger.info(f"Generating business names for {len(columns_needing_names)} columns...")
             
-            # Generate readable names for columns that don't have them
+            # Generate business names for columns that don't have them
             updated = False
             success_count = 0
             
             for idx, column_name, data_type in columns_needing_names:
                 try:
-                    readable_name = self.ai_generator.generate_readable_column_name(column_name, data_type)
-                    if readable_name:
+                    business_name = self.ai_generator.generate_readable_column_name(column_name, data_type)
+                    if business_name:
                         # Ensure the column exists and is of string type
-                        if 'Readable Column Name' not in columns_df.columns:
-                            columns_df['Readable Column Name'] = ''
+                        if 'Column Business Name' not in columns_df.columns:
+                            columns_df['Column Business Name'] = ''
                         
                         # Convert to string to avoid dtype issues
-                        columns_df['Readable Column Name'] = columns_df['Readable Column Name'].astype(str)
-                        columns_df.at[idx, 'Readable Column Name'] = str(readable_name)
+                        columns_df['Column Business Name'] = columns_df['Column Business Name'].astype(str)
+                        columns_df.at[idx, 'Column Business Name'] = str(business_name)
                         updated = True
                         success_count += 1
-                        self.logger.info(f"Generated readable name for {column_name}: {readable_name}")
+                        self.logger.info(f"Generated business name for {column_name}: {business_name}")
                     else:
-                        self.logger.warning(f"No readable name generated for {column_name}")
+                        self.logger.warning(f"No business name generated for {column_name}")
                 except Exception as e:
-                    self.logger.error(f"Error generating readable name for {column_name}: {str(e)}")
+                    self.logger.error(f"Error generating business name for {column_name}: {str(e)}")
             
             if updated:
                 write_success = self.excel_utils.write_sheet_data(self.workbook_path, "Columns", columns_df)
                 if write_success:
-                    self.logger.info(f"Successfully generated {success_count}/{len(columns_needing_names)} readable column names")
+                    self.logger.info(f"Successfully generated {success_count}/{len(columns_needing_names)} business column names")
                 return write_success
             
             return True
             
         except Exception as e:
-            self.logger.error(f"Error generating readable column names: {str(e)}")
+            self.logger.error(f"Error generating business column names: {str(e)}")
             return False
 
     # ANCHOR: AI Analytics and Reporting Methods

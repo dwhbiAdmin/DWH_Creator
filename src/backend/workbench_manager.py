@@ -31,6 +31,7 @@ sys.path.insert(0, str(src_dir))
 from utils.excel_utils import ExcelUtils
 from utils.logger import Logger
 from utils.config_manager import ConfigManager
+from utils.column_cascading import ColumnCascadingEngine
 from .ai_workbench_manager import AIWorkbenchManager
 
 # ANCHOR: WorkbenchManager Class Definition
@@ -56,6 +57,7 @@ class WorkbenchManager:
         self.config = ConfigManager()
         self.openai_api_key = openai_api_key
         self.ai_workbench = None  # Will be initialized when workbook is found
+        self.cascading_engine = None  # Will be initialized when workbook is found
         
         if project_path:
             self._find_workbook()
@@ -77,6 +79,8 @@ class WorkbenchManager:
             self.logger.info(f"Found workbook: {self.workbook_path}")
             # Initialize AI workbench manager
             self.ai_workbench = AIWorkbenchManager(self.workbook_path, self.openai_api_key)
+            # Initialize column cascading engine
+            self.cascading_engine = ColumnCascadingEngine(self.workbook_path)
         else:
             self.logger.error(f"No workbook found in {workbench_dir}")
 
@@ -362,11 +366,143 @@ class WorkbenchManager:
         return self.ai_workbench and self.ai_workbench.is_ai_available()
 
     # ANCHOR: Cascade and Sync Operations
-    def cascade_columns(self) -> bool:
-        """Perform deterministic column filling based on relations."""
-        # TODO: Implement cascade logic based on specification
-        self.logger.info("Cascade operations - implementation pending")
-        return True
+    def cascade_columns(self, artifact_id: int = None, include_technical_fields: bool = True) -> bool:
+        """
+        Perform deterministic column filling based on relations.
+        
+        Args:
+            artifact_id: Optional specific artifact ID to cascade. If None, process all artifacts.
+            include_technical_fields: Whether to include technical/audit columns
+            
+        Returns:
+            bool: True if cascading was successful
+        """
+        if not self.cascading_engine:
+            self.logger.error("Column cascading engine not initialized")
+            return False
+        
+        try:
+            if artifact_id:
+                # Cascade for specific artifact
+                return self.cascading_engine.cascade_columns_for_artifact(str(artifact_id), include_technical_fields)
+            else:
+                # Use the new correct cascading logic: find missing artifacts and cascade them
+                return self.cascading_engine.cascade_all_missing_artifacts(include_technical_fields)
+                
+        except Exception as e:
+            self.logger.error(f"Error during column cascading: {str(e)}")
+            return False
+    
+    def cascade_columns_for_artifact(self, artifact_id, include_technical_fields: bool = True) -> bool:
+        """
+        Cascade columns for a specific artifact.
+        
+        Args:
+            artifact_id: ID of the artifact to cascade columns for (string or int)
+            include_technical_fields: Whether to include technical/audit columns
+            
+        Returns:
+            bool: True if cascading was successful
+        """
+        if not self.cascading_engine:
+            self.logger.error("Column cascading engine not initialized")
+            return False
+        
+        return self.cascading_engine.cascade_columns_for_artifact(str(artifact_id), include_technical_fields)
+    
+    def create_cascading_config(self) -> bool:
+        """
+        Create cascading configuration file with default settings.
+        
+        Returns:
+            bool: True if configuration was created successfully
+        """
+        if not self.cascading_engine:
+            self.logger.error("Column cascading engine not initialized")
+            return False
+        
+        return self.cascading_engine.create_cascading_config_file()
+    
+    def regenerate_all_columns(self, include_technical_fields: bool = True) -> bool:
+        """
+        Regenerate ALL columns with globally unique IDs and proper ordering.
+        
+        Args:
+            include_technical_fields: Whether to include technical fields
+            
+        Returns:
+            bool: True if regeneration was successful
+        """
+        if not self.cascading_engine:
+            self.logger.error("Column cascading engine not initialized")
+            return False
+            
+        return self.cascading_engine.regenerate_all_columns_with_unique_ids(include_technical_fields)
+
+    def get_cascading_preview(self, artifact_id: int) -> dict:
+        """
+        Get a preview of what columns would be cascaded for an artifact.
+        
+        Args:
+            artifact_id: ID of the artifact to preview cascading for
+            
+        Returns:
+            dict: Preview information including column count and names
+        """
+        if not self.cascading_engine:
+            return {"error": "Column cascading engine not initialized"}
+        
+        try:
+            # Load artifacts data
+            artifacts_df = self.excel_utils.read_sheet_data(self.workbook_path, "Artifacts")
+            target_artifact = artifacts_df[artifacts_df['Artifact ID'] == artifact_id]
+            
+            if target_artifact.empty:
+                return {"error": f"Artifact {artifact_id} not found"}
+            
+            target_artifact = target_artifact.iloc[0]
+            upstream_relation = target_artifact.get('Upstream Relation', '')
+            
+            if not upstream_relation:
+                return {"message": "No upstream relationship defined", "columns": []}
+            
+            # Get preview (this would be a new method in the cascading engine)
+            preview = {
+                "artifact_id": artifact_id,
+                "artifact_name": target_artifact.get('Artifact Name', ''),
+                "upstream_relation": upstream_relation,
+                "stage": target_artifact.get('Stage Name', ''),
+                "preview_note": f"Would cascade columns based on '{upstream_relation}' relationship"
+            }
+            
+            return preview
+            
+        except Exception as e:
+            return {"error": f"Error generating preview: {str(e)}"}
+    
+    def get_artifacts_with_upstream(self) -> List[Dict]:
+        """
+        Get list of artifacts that have upstream relationships.
+        
+        Returns:
+            List[Dict]: List of artifacts with upstream relationships
+        """
+        try:
+            artifacts_df = self.excel_utils.read_sheet_data(self.workbook_path, "Artifacts")
+            if artifacts_df.empty:
+                return []
+            
+            # Filter artifacts with upstream relationships
+            artifacts_with_upstream = artifacts_df[
+                artifacts_df['Upstream Relation'].notna() & 
+                (artifacts_df['Upstream Relation'] != '')
+            ]
+            
+            return artifacts_with_upstream[['Artifact ID', 'Artifact Name', 'Stage Name', 'Upstream Relation']].to_dict('records')
+            
+        except Exception as e:
+            self.logger.error(f"Error getting artifacts with upstream relationships: {str(e)}")
+            return []
     
     def sync_and_validate(self) -> dict:
         """

@@ -36,7 +36,8 @@ class TestReadableColumnNames(unittest.TestCase):
     def test_ai_workbench_manager_initialization(self):
         """Test AI workbench manager initializes correctly."""
         self.assertEqual(self.ai_workbench.workbook_path, str(self.test_workbook_path))
-        self.assertEqual(self.ai_workbench.openai_api_key, self.api_key)
+        # Check that AI generator was created 
+        self.assertIsNotNone(self.ai_workbench.ai_generator)
         self.assertIsNotNone(self.ai_workbench.logger)
         
     @patch('utils.excel_utils.pd.read_excel')

@@ -25,7 +25,7 @@
 
 - **Project Management**: Create and manage data warehouse projects with standardized structures
 - **Excel Workbench Integration**: Seamless integration with Excel for data modeling and documentation
-- **AI-Powered Automation**: Generate business comments, readable column names, and documentation using OpenAI
+- **AI-Powered Automation**: Generate business comments, business column names, and documentation using OpenAI
 - **Multi-Stage Architecture**: Support for drop zone, bronze, silver, and gold layer implementations
 - **Business Intelligence Ready**: Generate artifacts optimized for Power BI and other BI tools
 
@@ -39,7 +39,7 @@
 ### 🤖 **AI-Powered Features**
 - **Artifact Comments**: Generate business-friendly descriptions for data artifacts
 - **Column Comments**: Create detailed explanations for database columns
-- **Readable Column Names**: Convert technical names to business-friendly snake_case format
+- **Business Column Names**: Convert technical names to business-friendly snake_case format
 - **Smart Validation**: AI-powered data quality and consistency checks
 
 ### 📊 **Workbench Operations**
@@ -145,7 +145,7 @@ graph TB
 4. **Generate AI Content**
    - Use `5. Generate AI Comments (Artifacts)`
    - Use `6. Generate AI Comments (Columns)`
-   - Use `7. Generate Readable Column Names`
+   - Use `7. Generate Business Column Names`
 
 ### Example Workflow
 
@@ -159,7 +159,7 @@ Location: [default]
 Workbench Operations > 4. Import/Assign from 1_sources
 
 # 3. Generate AI content
-Workbench Operations > 7. Generate Readable Column Names
+Workbench Operations > 7. Generate Business Column Names
 Generated: cust_ID → customer_id, order_dt → order_date
 
 # 4. Save and validate
@@ -175,7 +175,7 @@ Workbench Operations > 10. Save Workbook
 
 ### AI Features
 - [AI-Powered Comments](user-guides/ai-comments.md)
-- [Readable Column Names](user-guides/readable-column-names.md)
+- [Business Column Names](user-guides/business-column-names.md)
 - [AI Configuration](user-guides/ai-configuration.md)
 
 ### Advanced Topics

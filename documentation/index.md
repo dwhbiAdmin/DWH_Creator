@@ -11,7 +11,7 @@ Welcome to the comprehensive documentation for **DWH Creator**. This documentati
 | I want to... | Go to... |
 |--------------|----------|
 | **Get started quickly** | [Getting Started Guide](user-guides/getting-started.md) |
-| **Use AI features** | [Readable Column Names](user-guides/readable-column-names.md) |
+| **Use AI features** | [Business Column Names](user-guides/business-column-names.md) |
 | **Understand the architecture** | [System Architecture](technical/architecture.md) |
 | **Integrate AI functionality** | [AI Integration](technical/ai-integration.md) |
 | **View original requirements** | [Specifications](#specifications) |
@@ -28,7 +28,7 @@ Welcome to the comprehensive documentation for **DWH Creator**. This documentati
   - Troubleshooting common issues
 
 ### 🔧 Feature Guides
-- **[Readable Column Names](user-guides/readable-column-names.md)** - AI-powered business naming
+- **[Business Column Names](user-guides/business-column-names.md)** - AI-powered business naming
   - Business requirements and use cases
   - Step-by-step usage instructions
   - Examples and best practices

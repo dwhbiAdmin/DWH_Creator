@@ -25,7 +25,8 @@ class ConfigManager:
             "stage_id": "s0", 
             "stage_name": "0_drop_zone", 
             "stage_color": "gray",
-            "stage_technical_columns": "source_name;partition_field;created_timestamp;batch_id",
+            "platform": "Azure SQL",
+            "source_or_business_side": "source",
             "stage_ddl_default_templates": "drop_zone_table_ddl.sql",
             "stage_etl_default_templates": "source_to_drop_zone_etl.sql"
         },
@@ -33,7 +34,8 @@ class ConfigManager:
             "stage_id": "s1", 
             "stage_name": "1_bronze", 
             "stage_color": "bronze",
-            "stage_technical_columns": "source_name;partition_field;created_timestamp;batch_id;record_hash",
+            "platform": "Azure SQL",
+            "source_or_business_side": "source",
             "stage_ddl_default_templates": "bronze_table_ddl.sql",
             "stage_etl_default_templates": "drop_zone_to_bronze_etl.sql"
         },
@@ -41,7 +43,8 @@ class ConfigManager:
             "stage_id": "s2", 
             "stage_name": "2_silver", 
             "stage_color": "silver",
-            "stage_technical_columns": "created_timestamp;updated_timestamp;batch_id;is_active;effective_date;end_date",
+            "platform": "Azure SQL",
+            "source_or_business_side": "business",
             "stage_ddl_default_templates": "silver_table_ddl.sql",
             "stage_etl_default_templates": "bronze_to_silver_etl.sql"
         },
@@ -49,7 +52,8 @@ class ConfigManager:
             "stage_id": "s3", 
             "stage_name": "3_gold", 
             "stage_color": "gold",
-            "stage_technical_columns": "created_timestamp;updated_timestamp;batch_id",
+            "platform": "Azure SQL",
+            "source_or_business_side": "business",
             "stage_ddl_default_templates": "gold_table_ddl.sql",
             "stage_etl_default_templates": "silver_to_gold_etl.sql"
         },
@@ -57,7 +61,8 @@ class ConfigManager:
             "stage_id": "s4", 
             "stage_name": "4_mart", 
             "stage_color": "blue",
-            "stage_technical_columns": "created_timestamp;updated_timestamp",
+            "platform": "Azure SQL",
+            "source_or_business_side": "business",
             "stage_ddl_default_templates": "mart_table_ddl.sql;mart_view_ddl.sql",
             "stage_etl_default_templates": "gold_to_mart_etl.sql"
         },
@@ -65,7 +70,8 @@ class ConfigManager:
             "stage_id": "s5", 
             "stage_name": "5_PBI_Model", 
             "stage_color": "purple",
-            "stage_technical_columns": "",
+            "platform": "Power BI",
+            "source_or_business_side": "business",
             "stage_ddl_default_templates": "",
             "stage_etl_default_templates": ""
         },
@@ -73,7 +79,8 @@ class ConfigManager:
             "stage_id": "s6", 
             "stage_name": "6_PBI_Reports", 
             "stage_color": "green",
-            "stage_technical_columns": "",
+            "platform": "Power BI",
+            "source_or_business_side": "business",
             "stage_ddl_default_templates": "",
             "stage_etl_default_templates": ""
         }
@@ -103,7 +110,8 @@ class ConfigManager:
             "Stage ID",
             "Stage Name", 
             "Stage Color",
-            "Stage Technical Columns",
+            "Platform",
+            "Source or Business Side",
             "Stage DDL Default Templates",
             "Stage ETL Default Templates"
         ]
@@ -125,15 +133,14 @@ class ConfigManager:
             "Stage Name",
             "Artifact ID", 
             "Artifact Name",
-            "Upstream Artifacts",
-            "Downstream Artifacts",
-            "Artifact Comment",
-            "Readable Column Name",
+            "Artifact Type",
             "Artifact Topology",
             "Upstream Relations",
-            "Upstream Relation Types",
+            "Upstream Relation",
+            "Relation Type",
             "Artifact Relation Direction",
             "Artifact Domain",
+            "Artifact Comment",
             "DDL Template",
             "ETL Template",
             "DDL Production File",
@@ -153,15 +160,16 @@ class ConfigManager:
             dict: Sheet configuration with headers
         """
         headers = [
+            "Stage Name",
             "Artifact ID",
+            "Artifact Name",
             "Column ID",
             "Column Name",
             "Order",
             "Data Type",
             "Column Comment",
-            "Readable Column Name",
-            "Column Group",
-            "Simple Calculation"
+            "Column Business Name",
+            "Column Group"
         ]
         
         return {
@@ -206,15 +214,16 @@ class ConfigManager:
     
     def get_relation_types(self) -> list:
         """
-        Get available relation types.
+        Get available upstream relation types for column cascading.
         
         Returns:
-            list: List of relation type names
+            list: List of upstream relation type names
         """
         return [
-            "source",        # Solid line
-            "lookup",        # Dotted line
-            "pbi_lookup"     # Diagram only (Power BI)
+            "main",          # Full column propagation with technical fields
+            "get_key",       # Dimension key propagation for fact tables  
+            "lookup",        # Limited column lookup (first 3 fields)
+            "pbi"            # No cascading impact (Power BI specific)
         ]
     
     def get_relation_directions(self) -> list:

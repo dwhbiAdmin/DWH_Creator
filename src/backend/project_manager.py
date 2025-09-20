@@ -28,6 +28,7 @@ from utils.config_manager import ConfigManager
 from utils.file_utils import FileUtils
 from utils.excel_utils import ExcelUtils
 from utils.logger import Logger
+from utils.cascading_config_setup import CascadingConfigManager
 
 # ANCHOR: ProjectManager Class Definition
 
@@ -111,6 +112,10 @@ class ProjectManager:
             workbook_path = os.path.join(project_path, "2_workbench", f"workbench_{project_name}.xlsx")
             self._create_excel_workbook(workbook_path, project_name)
             
+            # Create project-specific cascading configuration file
+            config_path = os.path.join(project_path, "2_workbench", f"cascading_config_{project_name}.xlsx")
+            self._create_cascading_config(config_path, project_name)
+            
             self.logger.info(f"Project '{project_name}' created successfully at: {project_path}")
             return project_path
             
@@ -143,6 +148,24 @@ class ProjectManager:
             self.logger.info(f"Created Excel workbook: {workbook_path}")
         else:
             raise Exception(f"Failed to create Excel workbook: {workbook_path}")
+    
+    def _create_cascading_config(self, config_path: str, project_name: str):
+        """
+        Create project-specific cascading configuration file.
+        
+        Args:
+            config_path: Path where to create the configuration file
+            project_name: Name of the project for project-specific settings
+        """
+        try:
+            config_manager = CascadingConfigManager()
+            if config_manager.create_project_config_file(config_path, project_name):
+                self.logger.info(f"Created project-specific cascading configuration: {config_path}")
+            else:
+                raise Exception(f"Failed to create cascading configuration: {config_path}")
+        except Exception as e:
+            self.logger.error(f"Error creating cascading configuration: {str(e)}")
+            raise
     
     # ANCHOR: Project Management Methods
     def open_existing_project(self, project_path: str) -> bool:

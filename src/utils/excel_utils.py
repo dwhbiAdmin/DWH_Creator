@@ -107,6 +107,25 @@ class ExcelUtils:
             return False
     
     @staticmethod
+    def create_workbook(file_path: str) -> bool:
+        """
+        Create a simple Excel workbook with one default sheet.
+        
+        Args:
+            file_path: Path where to create the workbook
+            
+        Returns:
+            bool: True if workbook created successfully
+        """
+        try:
+            wb = Workbook()
+            wb.save(file_path)
+            return True
+        except Exception as e:
+            print(f"Error creating Excel workbook: {str(e)}")
+            return False
+    
+    @staticmethod
     def read_sheet_data(file_path: str, sheet_name: str) -> pd.DataFrame:
         """
         Read data from Excel sheet.
@@ -373,3 +392,77 @@ class ExcelUtils:
             raise
         except Exception as e:
             raise
+
+    @staticmethod
+    def apply_sheet_formatting(file_path: str, sheet_name: str) -> bool:
+        """
+        Apply formatting to Excel sheet: freeze first row and add filters.
+        
+        Args:
+            file_path: Path to Excel file
+            sheet_name: Name of sheet to format
+            
+        Returns:
+            bool: True if formatting applied successfully
+        """
+        try:
+            from openpyxl import load_workbook
+            
+            # Load the workbook
+            wb = load_workbook(file_path)
+            
+            # Check if sheet exists
+            if sheet_name not in wb.sheetnames:
+                return False
+                
+            ws = wb[sheet_name]
+            
+            # Freeze the first row
+            ws.freeze_panes = 'A2'
+            
+            # Add auto filter to the first row
+            if ws.max_row > 0 and ws.max_column > 0:
+                ws.auto_filter.ref = f"A1:{ws.cell(1, ws.max_column).coordinate}"
+            
+            # Save the workbook
+            wb.save(file_path)
+            return True
+            
+        except Exception as e:
+            print(f"Error applying formatting to sheet {sheet_name}: {e}")
+            return False
+
+    @staticmethod 
+    def format_all_sheets(file_path: str) -> bool:
+        """
+        Apply formatting to all sheets in workbook.
+        
+        Args:
+            file_path: Path to Excel file
+            
+        Returns:
+            bool: True if all sheets formatted successfully
+        """
+        try:
+            from openpyxl import load_workbook
+            
+            wb = load_workbook(file_path)
+            success = True
+            
+            for sheet_name in wb.sheetnames:
+                ws = wb[sheet_name]
+                
+                # Freeze the first row
+                ws.freeze_panes = 'A2'
+                
+                # Add auto filter to the first row
+                if ws.max_row > 0 and ws.max_column > 0:
+                    ws.auto_filter.ref = f"A1:{ws.cell(1, ws.max_column).coordinate}"
+            
+            # Save once after formatting all sheets
+            wb.save(file_path)
+            return True
+            
+        except Exception as e:
+            print(f"Error formatting all sheets: {e}")
+            return False

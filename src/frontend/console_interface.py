@@ -238,7 +238,7 @@ class ConsoleInterface:
             print("4. Import/Assign from 1_sources")
             print("5. Generate AI Comments (Artifacts)")
             print("6. Generate AI Comments (Columns)")
-            print("7. Generate Readable Column Names")
+            print("7. Generate Business Column Names")
             print("8. Cascade Operations")
             print("9. Sync & Validate")
             print("10. Save Workbook")
@@ -389,23 +389,23 @@ class ConsoleInterface:
         input("Press Enter to continue...")
     
     def _handle_readable_column_names(self):
-        """Handle readable column names generation."""
-        print("\n🏷️  Generate Readable Column Names")
+        """Handle business column names generation."""
+        print("\n🏷️  Generate Business Column Names")
         print("-" * 40)
         
         if not self.workbench_manager.is_ai_available():
-            print("❌ AI readable name generation not available")
+            print("❌ AI business name generation not available")
             print("💡 Please ensure OpenAI API key is configured in config/config.ini")
             input("Press Enter to continue...")
             return
         
-        proceed = input("🔄 Generate readable names for all columns? (y/n): ").strip().lower()
+        proceed = input("🔄 Generate business names for all columns? (y/n): ").strip().lower()
         if proceed in ['y', 'yes']:
-            print("\n⏳ Generating readable column names...")
+            print("\n⏳ Generating business column names...")
             if self.workbench_manager.generate_readable_column_names():
-                print("✅ Readable column names generated successfully!")
+                print("✅ Business column names generated successfully!")
             else:
-                print("❌ Failed to generate readable column names")
+                print("❌ Failed to generate business column names")
                 print("💡 Check console output for details")
         
         input("Press Enter to continue...")
@@ -413,9 +413,213 @@ class ConsoleInterface:
     # ANCHOR: Additional Operations Handlers
     def _handle_cascade_operations(self):
         """Handle cascade operations."""
-        print("\n🔄 Cascade Operations")
-        print("-" * 25)
-        print("🚧 Cascade operations coming soon!")
+        while True:
+            print("\n🔄 Cascade Operations")
+            print("-" * 25)
+            print("1. Cascade All Artifacts")
+            print("2. Cascade Specific Artifact")
+            print("3. Preview Cascading")
+            print("4. Create Cascading Configuration")
+            print("5. List Artifacts with Upstream Relations")
+            print("0. Back to Workbench Menu")
+            print("-" * 25)
+            
+            choice = self.get_user_choice(5)
+            
+            if choice == 0:
+                break
+            elif choice == 1:
+                self._cascade_all_artifacts()
+            elif choice == 2:
+                self._cascade_specific_artifact()
+            elif choice == 3:
+                self._preview_cascading()
+            elif choice == 4:
+                self._create_cascading_config()
+            elif choice == 5:
+                self._list_artifacts_with_upstream()
+    
+    def _cascade_all_artifacts(self):
+        """Handle cascading all artifacts."""
+        print("\n🔄 Cascading All Artifacts")
+        print("-" * 30)
+        
+        try:
+            # Get artifacts with upstream relationships
+            artifacts = self.workbench_manager.get_artifacts_with_upstream()
+            
+            if not artifacts:
+                print("❌ No artifacts with upstream relationships found")
+                input("Press Enter to continue...")
+                return
+            
+            print(f"Found {len(artifacts)} artifacts with upstream relationships:")
+            for artifact in artifacts:
+                print(f"  • {artifact['Artifact Name']} (ID: {artifact['Artifact ID']}) - {artifact['Upstream Relation']}")
+            
+            print("\n⚠️  This will cascade columns for all these artifacts.")
+            confirm = input("Continue? (y/N): ").strip().lower()
+            
+            if confirm == 'y':
+                print("\n⏳ Processing cascading operations...")
+                success = self.workbench_manager.cascade_columns()
+                
+                if success:
+                    print("✅ Column cascading completed successfully!")
+                else:
+                    print("❌ Column cascading failed. Check logs for details.")
+            else:
+                print("❌ Operation cancelled")
+                
+        except Exception as e:
+            print(f"❌ Error during cascading: {str(e)}")
+        
+        input("Press Enter to continue...")
+    
+    def _cascade_specific_artifact(self):
+        """Handle cascading for a specific artifact."""
+        print("\n🎯 Cascade Specific Artifact")
+        print("-" * 32)
+        
+        try:
+            # Get artifacts with upstream relationships
+            artifacts = self.workbench_manager.get_artifacts_with_upstream()
+            
+            if not artifacts:
+                print("❌ No artifacts with upstream relationships found")
+                input("Press Enter to continue...")
+                return
+            
+            print("Available artifacts with upstream relationships:")
+            for i, artifact in enumerate(artifacts, 1):
+                print(f"{i}. {artifact['Artifact Name']} (ID: {artifact['Artifact ID']}) - {artifact['Upstream Relation']}")
+            
+            print("0. Cancel")
+            
+            while True:
+                try:
+                    choice = int(input(f"\nSelect artifact (0-{len(artifacts)}): "))
+                    if choice == 0:
+                        print("❌ Operation cancelled")
+                        break
+                    elif 1 <= choice <= len(artifacts):
+                        selected_artifact = artifacts[choice - 1]
+                        artifact_id = selected_artifact['Artifact ID']
+                        
+                        print(f"\n⏳ Cascading columns for: {selected_artifact['Artifact Name']}")
+                        success = self.workbench_manager.cascade_columns_for_artifact(artifact_id)
+                        
+                        if success:
+                            print("✅ Column cascading completed successfully!")
+                        else:
+                            print("❌ Column cascading failed. Check logs for details.")
+                        break
+                    else:
+                        print(f"❌ Please enter a number between 0 and {len(artifacts)}")
+                except ValueError:
+                    print("❌ Please enter a valid number")
+                    
+        except Exception as e:
+            print(f"❌ Error during cascading: {str(e)}")
+        
+        input("Press Enter to continue...")
+    
+    def _preview_cascading(self):
+        """Show preview of cascading operations."""
+        print("\n�️  Preview Cascading")
+        print("-" * 21)
+        
+        try:
+            # Get artifacts with upstream relationships
+            artifacts = self.workbench_manager.get_artifacts_with_upstream()
+            
+            if not artifacts:
+                print("❌ No artifacts with upstream relationships found")
+                input("Press Enter to continue...")
+                return
+            
+            print("Cascading Preview:")
+            for artifact in artifacts:
+                artifact_id = artifact['Artifact ID']
+                preview = self.workbench_manager.get_cascading_preview(artifact_id)
+                
+                print(f"\n📋 {artifact['Artifact Name']} (ID: {artifact_id})")
+                print(f"   Stage: {artifact['Stage Name']}")
+                print(f"   Upstream Relation: {artifact['Upstream Relation']}")
+                
+                if 'error' in preview:
+                    print(f"   ❌ {preview['error']}")
+                elif 'message' in preview:
+                    print(f"   ℹ️  {preview['message']}")
+                else:
+                    print(f"   📝 {preview.get('preview_note', 'Would cascade columns')}")
+                    
+        except Exception as e:
+            print(f"❌ Error generating preview: {str(e)}")
+        
+        input("Press Enter to continue...")
+    
+    def _create_cascading_config(self):
+        """Create cascading configuration file."""
+        print("\n⚙️  Create Cascading Configuration")
+        print("-" * 38)
+        
+        try:
+            print("This will create a configuration file with:")
+            print("• Data type mappings between platforms")
+            print("• Technical columns for each stage")
+            print("• Default cascading rules")
+            
+            confirm = input("\nCreate configuration file? (y/N): ").strip().lower()
+            
+            if confirm == 'y':
+                print("\n⏳ Creating configuration file...")
+                success = self.workbench_manager.create_cascading_config()
+                
+                if success:
+                    print("✅ Cascading configuration created successfully!")
+                    print("📁 Check the workbench folder for 'cascading_config.xlsx'")
+                else:
+                    print("❌ Failed to create configuration file. Check logs for details.")
+            else:
+                print("❌ Operation cancelled")
+                
+        except Exception as e:
+            print(f"❌ Error creating configuration: {str(e)}")
+        
+        input("Press Enter to continue...")
+    
+    def _list_artifacts_with_upstream(self):
+        """List all artifacts with upstream relationships."""
+        print("\n📋 Artifacts with Upstream Relations")
+        print("-" * 40)
+        
+        try:
+            artifacts = self.workbench_manager.get_artifacts_with_upstream()
+            
+            if not artifacts:
+                print("❌ No artifacts with upstream relationships found")
+            else:
+                print(f"Found {len(artifacts)} artifacts with upstream relationships:\n")
+                
+                # Group by stage for better organization
+                stages = {}
+                for artifact in artifacts:
+                    stage = artifact['Stage Name']
+                    if stage not in stages:
+                        stages[stage] = []
+                    stages[stage].append(artifact)
+                
+                for stage, stage_artifacts in stages.items():
+                    print(f"🏗️  {stage} Stage:")
+                    for artifact in stage_artifacts:
+                        print(f"   • {artifact['Artifact Name']} (ID: {artifact['Artifact ID']})")
+                        print(f"     Upstream Relation: {artifact['Upstream Relation']}")
+                    print()
+                    
+        except Exception as e:
+            print(f"❌ Error listing artifacts: {str(e)}")
+        
         input("Press Enter to continue...")
     
     def _handle_sync_validate(self):
