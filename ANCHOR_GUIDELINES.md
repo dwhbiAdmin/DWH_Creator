@@ -76,6 +76,21 @@ Anchors are special comments that create navigation points in your code using th
 - **ConfigManager Class Definition** - Class start
 - **Default Configuration Constants** - Configuration data
 
+#### `src/utils/column_cascading.py`
+- **Imports and Dependencies** - All import statements  
+- **Enums and Constants** - Configuration constants and enums
+- **Column Cascading Engine Class** - Main engine class definition
+- **Main Cascading Methods** - Core cascading logic
+- **Specific Cascading Implementations** - Relation type implementations
+- **Helper Methods** - Internal helper functions
+- **Utility Methods** - General utility functions
+- **Configuration Management** - Config file management
+
+#### `src/utils/cascading_config_setup.py`
+- **Imports and Dependencies** - All import statements
+- **CascadingConfigManager Class** - Configuration manager class
+- **Project Configuration Methods** - Project-specific config creation
+
 #### `src/utils/logger.py`
 - **Imports and Dependencies** - All import statements
 - **Logger Class Definition** - Class start

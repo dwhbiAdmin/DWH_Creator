@@ -5,6 +5,7 @@ Column Cascading Configuration Setup
 Sets up default configuration files for column cascading functionality.
 """
 
+# ANCHOR: Imports and Dependencies
 import pandas as pd
 from pathlib import Path
 import sys
@@ -17,6 +18,7 @@ sys.path.insert(0, str(src_dir))
 from utils.excel_utils import ExcelUtils
 from utils.logger import Logger
 
+# ANCHOR: CascadingConfigManager Class
 class CascadingConfigManager:
     """Manages cascading configuration setup and defaults."""
     
@@ -24,6 +26,7 @@ class CascadingConfigManager:
         self.excel_utils = ExcelUtils()
         self.logger = Logger()
     
+    # ANCHOR: Project Configuration Methods
     def create_project_config_file(self, config_path: str, project_name: str) -> bool:
         """
         Create project-specific cascading configuration file.

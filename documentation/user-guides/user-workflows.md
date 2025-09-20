@@ -155,6 +155,17 @@ This guide provides complete step-by-step workflows for using DWH Creator in rea
 
 Column cascading is an advanced feature that automatically propagates columns between data warehouse stages based on upstream relationships. This eliminates manual column definition and ensures consistency across your data pipeline.
 
+#### ✨ Enhanced Features (September 2025)
+
+- **🆔 Globally Unique Column IDs**: Every column gets a unique sequential ID (c1, c2, c3...)
+- **📊 Hierarchical Column Ordering**: Automatic ordering by priority:
+  1. **SK** (Surrogate Keys) - Order priority 1
+  2. **BK** (Business Keys) - Order priority 2  
+  3. **Attributes** (Regular fields) - Order priority 3
+  4. **Technical** (Audit fields) - Order priority 4
+- **🏷️ Project-Specific Configs**: Auto-generated `cascading_config_{ProjectName}.xlsx` files
+- **🔍 Smart Column Detection**: Automatic column group detection based on naming patterns
+
 #### Upstream Relationship Types
 
 - **`main`** - Full column propagation with technical fields
@@ -182,20 +193,26 @@ Column cascading is an advanced feature that automatically propagates columns be
 
 #### Phase 1: Configuration Setup (10 minutes)
 
-1. **Create Cascading Configuration**
+1. **Create Project-Specific Cascading Configuration**
    - Go to: `Workbench Operations` → `Cascade Operations`
    - Select: `4. Create Cascading Configuration`
-   - System creates `cascading_config.xlsx` with:
+   - System creates **project-specific** `cascading_config_{ProjectName}.xlsx` with:
      - Data type mappings (SQL Server ↔ Databricks ↔ Power BI)
      - Technical columns per stage
      - Default cascading rules
+     - **Project name integration**: Config file named after your project
 
-2. **Customize Data Type Mappings** (Optional)
-   - Open `cascading_config.xlsx`
+2. **Automatic Configuration Detection** 
+   - Column cascading engine **automatically detects** project-specific configs
+   - Uses `cascading_config_{ProjectName}.xlsx` when available
+   - Falls back to generic `cascading_config.xlsx` for backward compatibility
+
+3. **Customize Data Type Mappings** (Optional)
+   - Open `cascading_config_{ProjectName}.xlsx`
    - Edit `DataTypeMappings` sheet for platform-specific types
    - Save changes
 
-3. **Configure Technical Columns** (Optional)  
+4. **Configure Technical Columns** (Optional)  
    - Edit `TechnicalColumns` sheet
    - Customize stage-specific technical fields
    - Mark optional columns as needed

@@ -39,14 +39,27 @@ DWH_Creator/
 └── README.md
 ```
 
-## Key Features (Planned)
+## Key Features
+
+### ✅ Implemented Features
 
 - **Metadata-Driven Design**: Define data warehouse structure in Excel workbooks
+- **Project Management**: Create and manage multiple DWH projects with standardized structure
+- **AI-Powered Business Column Names**: Generate business-friendly column names using OpenAI
+- **Advanced Column Cascading**: Intelligent column propagation across data warehouse stages
+  - **Project-Specific Configurations**: Automatic creation of `cascading_config_{ProjectName}.xlsx`
+  - **Globally Unique Column IDs**: Sequential unique identifiers (c1 to c108+)
+  - **Hierarchical Column Ordering**: SK → BK → Attributes → Technical fields
+  - **Stage-Aware Propagation**: Control column flow between stages (s0-s6)
+- **Excel Integration**: Native Excel workbook operations with COM integration
 - **Template-Based Generation**: Generate DDL and ETL scripts from customizable templates  
+
+### 🚧 Planned Features
+
 - **Multi-Stage Architecture**: Support for drop zone, bronze, silver, gold, mart, and BI layers
 - **Git Integration**: Version control for projects and artifacts
-- **Modular Backend**: Clean separation of concerns with step-by-step processing
 - **Multiple UI Options**: Console, GUI, and future web interfaces
+- **Advanced ETL Generation**: Complete ETL pipeline automation
 
 ## Getting Started
 
@@ -115,7 +128,25 @@ The file is automatically ignored by `.gitignore` to protect your API keys.
 
 ## Development Status
 
-This project is currently in the skeleton creation phase. Implementation will proceed step-by-step under guided development.
+**Current Status**: ✅ **Production Ready Core Features**
+
+### Completed Modules:
+- ✅ **Project Management**: Full project creation and structure management
+- ✅ **Workbench Operations**: Excel workbook creation and data management  
+- ✅ **AI Integration**: Business column name generation with OpenAI
+- ✅ **Column Cascading Engine**: Advanced column propagation with unique IDs
+- ✅ **Configuration Management**: Project-specific and global configuration system
+
+### Recent Enhancements (September 2025):
+- 🆕 **Project-Specific Cascading Configs**: Auto-created `cascading_config_{ProjectName}.xlsx` files
+- 🆕 **Globally Unique Column IDs**: Sequential ID generation (c1-c108+) 
+- 🆕 **Hierarchical Column Ordering**: Automatic SK→BK→Attributes→Technical ordering
+- 🆕 **Enhanced Stage Control**: Improved column flow control between data warehouse stages
+
+### Next Development Phase:
+- Template engine implementation
+- DDL/ETL artifact generation
+- Git integration features
 
 ## Architecture
 
