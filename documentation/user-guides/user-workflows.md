@@ -158,6 +158,10 @@ Column cascading is an advanced feature that automatically propagates columns be
 #### ✨ Enhanced Features (September 2025)
 
 - **🆔 Globally Unique Column IDs**: Every column gets a unique sequential ID (c1, c2, c3...)
+- **🎯 Enhanced Relation Processing**: Context-aware deterministic relation logic
+  - **Smart Artifact Type Detection**: Automatic detection of dimensions, facts, and bridges
+  - **Stage Transition Awareness**: Context-specific processing based on source→target stages
+  - **Technical Field Injection**: Automatic stage and artifact-type specific technical columns
 - **📊 Hierarchical Column Ordering**: Automatic ordering by priority:
   1. **SK** (Surrogate Keys) - Order priority 1
   2. **BK** (Business Keys) - Order priority 2  
@@ -169,9 +173,18 @@ Column cascading is an advanced feature that automatically propagates columns be
 #### Upstream Relationship Types
 
 - **`main`** - Full column propagation with technical fields
+  - Context-aware processing based on artifact type (dimension/fact/bridge)
+  - Automatic technical field injection for stage and artifact type
+  - Smart data type optimization for target platform
 - **`get_key`** - Dimension key propagation for fact tables  
-- **`lookup`** - Limited column lookup (first 3 fields)
-- **`pbi`** - No cascading impact (Power BI specific)
+  - Extracts surrogate keys (SKs) and business keys (BKs) only
+  - Optimized for foreign key relationships in fact tables
+- **`lookup`** - Limited column lookup (configurable field limit, default 3)
+  - Priority-based selection: SKs → BKs → Attributes
+  - Ideal for reference lookups and denormalization
+- **`pbi`** - Power BI specific minimal cascading
+  - Keys and facts only for analytical models
+  - Optimized for Power BI performance
 
 ### Workflow: Setting Up Column Cascading
 

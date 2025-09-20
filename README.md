@@ -23,7 +23,9 @@ DWH_Creator/
 │   │   ├── config_manager.py      # Configuration management
 │   │   ├── logger.py              # Logging utilities
 │   │   ├── file_utils.py          # File operations
-│   │   └── excel_utils.py         # Excel-specific utilities
+│   │   ├── excel_utils.py         # Excel-specific utilities
+│   │   ├── column_cascading.py    # Enhanced column cascading engine
+│   │   └── relation_processor.py  # Deterministic relation processing logic
 │   └── __init__.py
 ├── templates/             # Global DDL/ETL template files (shared across all projects)
 ├── tests/                 # Unit tests
@@ -47,10 +49,13 @@ DWH_Creator/
 - **Project Management**: Create and manage multiple DWH projects with standardized structure
 - **AI-Powered Business Column Names**: Generate business-friendly column names using OpenAI
 - **Advanced Column Cascading**: Intelligent column propagation across data warehouse stages
+  - **Enhanced Relation Processing**: Context-aware deterministic relation logic with artifact type detection
   - **Project-Specific Configurations**: Automatic creation of `cascading_config_{ProjectName}.xlsx`
   - **Globally Unique Column IDs**: Sequential unique identifiers (c1 to c108+)
   - **Hierarchical Column Ordering**: SK → BK → Attributes → Technical fields
   - **Stage-Aware Propagation**: Control column flow between stages (s0-s6)
+  - **Multi-Relation Support**: Main, get_key, lookup, and PBI relation types
+  - **Technical Field Injection**: Automatic stage and artifact-specific technical columns
 - **Excel Integration**: Native Excel workbook operations with COM integration
 - **Template-Based Generation**: Generate DDL and ETL scripts from customizable templates  
 
@@ -138,6 +143,11 @@ The file is automatically ignored by `.gitignore` to protect your API keys.
 - ✅ **Configuration Management**: Project-specific and global configuration system
 
 ### Recent Enhancements (September 2025):
+- 🆕 **Enhanced Relation Processing**: Deterministic context-aware relation logic with artifact type detection
+  - Smart artifact type detection (dimension, fact, bridge) based on naming patterns and explicit types
+  - Context-aware stage transition processing (s0→s1 through s5→s6)
+  - Relation-specific processing: main, get_key, lookup, and PBI cascading patterns
+  - Automatic technical field generation based on stage and artifact type
 - 🆕 **Project-Specific Cascading Configs**: Auto-created `cascading_config_{ProjectName}.xlsx` files
 - 🆕 **Globally Unique Column IDs**: Sequential ID generation (c1-c108+) 
 - 🆕 **Hierarchical Column Ordering**: Automatic SK→BK→Attributes→Technical ordering

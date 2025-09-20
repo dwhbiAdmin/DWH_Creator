@@ -22,6 +22,7 @@ sys.path.insert(0, str(src_dir))
 from utils.excel_utils import ExcelUtils
 from utils.logger import Logger
 from utils.config_manager import ConfigManager
+from utils.relation_processor import RelationProcessor, ArtifactType
 
 # ANCHOR: Enums and Constants
 class UpstreamRelationType(Enum):
@@ -56,6 +57,9 @@ class ColumnCascadingEngine:
         self.excel_utils = ExcelUtils()
         self.logger = Logger()
         self.config_manager = ConfigManager()
+        
+        # Initialize enhanced relation processor
+        self.relation_processor = RelationProcessor()
         
         # Initialize global column ID tracking
         self._global_column_id_counter = None
@@ -628,7 +632,7 @@ class ColumnCascadingEngine:
                                          upstream_relation: str, stages_df: pd.DataFrame, 
                                          include_technical_fields: bool = True) -> List[Dict]:
         """
-        Generate new columns based on the upstream relation type.
+        Enhanced column generation using RelationProcessor for deterministic context-aware processing.
         
         Args:
             target_artifact: The target artifact to cascade to
@@ -640,177 +644,105 @@ class ColumnCascadingEngine:
         Returns:
             List[Dict]: List of new column definitions
         """
-        new_columns = []
-        
         # Get target artifact information
         target_artifact_id = target_artifact['Artifact ID']
         target_artifact_name = target_artifact['Artifact Name']
         target_stage_name = target_artifact['Stage Name']
+        target_artifact_type_field = target_artifact.get('Artifact Type', '')
         
-        # Get target platform for data type conversion
-        target_stage_row = stages_df[stages_df['Stage Name'] == target_stage_name]
-        target_platform = target_stage_row.iloc[0]['Platform '].strip() if not target_stage_row.empty else 'Azure SQL'
+        # Get source stage for context-aware processing
+        source_stage_name = upstream_columns.iloc[0]['Stage Name'] if not upstream_columns.empty else ''
         
-        # Generate column ID base  
+        # Map stage names to stage IDs for RelationProcessor
+        stage_name_to_id = {
+            '0_drop_zone': 's0',
+            '1_bronze': 's1',
+            '2_silver': 's2', 
+            '3_gold': 's3',
+            '4_mart': 's4',
+            '5_PBI_Model': 's5',
+            '6_PBI_Reports': 's6'
+        }
+        
+        source_stage_id = stage_name_to_id.get(source_stage_name, 's0')
+        target_stage_id = stage_name_to_id.get(target_stage_name, 's1')
+        
+        # Detect target artifact type using RelationProcessor
+        target_artifact_type = self.relation_processor.detect_artifact_type(
+            target_artifact_name, target_artifact_type_field
+        )
+        
+        self.logger.info(f"Enhanced cascading: {source_stage_id}→{target_stage_id}, "
+                        f"relation: {upstream_relation}, artifact: {target_artifact_type.value}")
+        
+        # Convert upstream columns DataFrame to list of dictionaries for RelationProcessor
+        source_columns = []
+        for _, col in upstream_columns.iterrows():
+            source_columns.append({
+                'Column Name': col['Column Name'],
+                'Data Type': col['Data Type'],
+                'Column Group': col.get('Column Group', 'attributes'),
+                'Column Comment': col.get('Column Comment', ''),
+                'Column Business Name': col.get('Column Business Name ', ''),
+                'Order': col.get('Order', 0),
+                'Artifact Name': col.get('Artifact Name', ''),
+                'Stage Name': col.get('Stage Name', '')
+            })
+        
+        # Use RelationProcessor for enhanced deterministic processing
+        if upstream_relation == 'main':
+            processed_columns = self.relation_processor.process_main_relation(
+                source_columns, source_stage_id, target_stage_id, target_artifact_type
+            )
+        elif upstream_relation == 'get_key':
+            processed_columns = self.relation_processor.process_get_key_relation(
+                source_columns, target_artifact_type
+            )
+        elif upstream_relation == 'lookup':
+            processed_columns = self.relation_processor.process_lookup_relation(
+                source_columns, field_limit=3
+            )
+        elif upstream_relation == 'pbi':
+            processed_columns = self.relation_processor.process_pbi_relation(source_columns)
+        else:
+            self.logger.warning(f"Unknown relation type: {upstream_relation}, falling back to main processing")
+            processed_columns = self.relation_processor.process_main_relation(
+                source_columns, source_stage_id, target_stage_id, target_artifact_type
+            )
+        
+        # Convert processed columns back to the expected format for the rest of the cascading engine
+        new_columns = []
+        target_platform = self._get_target_platform(stages_df, target_stage_name)
         ordinal = 1
         
-        # Special handling for dimensions: Add SK and BK as first two columns
-        if self._is_dimension_table(target_artifact_name):
-            dim_key_columns, ordinal = self._generate_dimension_key_columns(
-                target_artifact_name, ordinal, target_stage_name, target_artifact_id
-            )
-            new_columns.extend(dim_key_columns)
-        
-        # Special handling for facts: Collect all SK and BK columns from upstream
-        upstream_keys = []
-        if self._is_fact_table(target_artifact_name):
-            for _, upstream_col in upstream_columns.iterrows():
-                col_name = upstream_col['Column Name']
-                column_type = self._identify_column_type(col_name)
-                if column_type in ['surrogate_key', 'business_key']:
-                    upstream_keys.append(upstream_col)
-        
-        # Filter columns based on relation type and column types
-        columns_to_cascade = []
-        lookup_attribute_count = 0  # For lookup relation limit
-        
-        for _, upstream_col in upstream_columns.iterrows():
-            col_name = upstream_col['Column Name']
-            
-            # Skip partition fields in technical columns
-            if 'partition' in col_name.lower():
-                continue
-        
-        # For fact tables, first add all upstream SK and BK columns
-        if self._is_fact_table(target_artifact_name) and upstream_keys:
-            for upstream_col in upstream_keys:
-                col_name = upstream_col['Column Name']
-                column_type = self._identify_column_type(col_name)
-                converted_type = self._convert_data_type(upstream_col['Data Type'], target_platform)
-                
-                column_group = 'SKs' if column_type == 'surrogate_key' else 'BKs'
-                
-                new_column = {
-                    'Stage Name': target_stage_name,
-                    'Artifact ID': target_artifact_id,
-                    'Artifact Name': target_artifact_name,
-                    'Column ID': self._get_next_column_id(),
-                    'Column Name': col_name,
-                    'Order': ordinal,
-                    'Data Type': converted_type,
-                    'Column Comment': f"Foreign {column_type.replace('_', ' ')} from upstream table",
-                    'Column Business Name ': upstream_col.get('Column Business Name ', ''),
-                    'Column Group': column_group
-                }
-                new_columns.append(new_column)
-                ordinal += 1
-        
-        # Process regular columns based on relation type
-        for _, upstream_col in upstream_columns.iterrows():
-            col_name = upstream_col['Column Name']
-            
-            # Special handling for technical fields from upstream stages
-            if upstream_col.get('Column Group', '') == 'technical_fields':
-                # For technical fields, check if they should cascade forward
-                # Only cascade required technical fields that are marked to take to next level
-                upstream_stage_name = upstream_col.get('Stage Name', '')
-                if self._should_cascade_technical_field(col_name, upstream_stage_name):
-                    columns_to_cascade.append(upstream_col)
-                continue
-            
-            # Skip partition fields in technical columns
-            if 'partition' in col_name.lower():
-                continue
-                
-            # Skip keys if this is a fact table (already processed above)
-            if self._is_fact_table(target_artifact_name):
-                column_type = self._identify_column_type(col_name)
-                if column_type in ['surrogate_key', 'business_key']:
-                    continue  # Already processed in fact table key section
-            
-            # Check if column should be cascaded based on relation type
-            should_cascade = self._should_cascade_column(col_name, upstream_relation)
-            
-            # Special handling for lookup relation (max 3 attribute columns)
-            if upstream_relation == 'lookup' and self._identify_column_type(col_name) == 'attribute':
-                if lookup_attribute_count >= 3:
-                    continue  # Skip additional attribute columns for lookup
-                lookup_attribute_count += 1
-            
-            if should_cascade:
-                columns_to_cascade.append(upstream_col)
-        
-        # Generate new columns from filtered list
-        for upstream_col in columns_to_cascade:
-            col_name = upstream_col['Column Name']
-            column_type = self._identify_column_type(col_name)
-            
+        for processed_col in processed_columns:
             # Convert data type for target platform
-            converted_type = self._convert_data_type(upstream_col['Data Type'], target_platform)
-            
-            # Determine column group based on type
-            if column_type == 'business_key':
-                column_group = 'BKs'
-            elif column_type == 'primary_key':
-                column_group = 'PKs'
-            elif column_type == 'surrogate_key':
-                column_group = 'SKs'
-            else:
-                column_group = upstream_col.get('Column Group', 'attributes')
-            
-            # Create comment based on relation type
-            if upstream_relation == 'get_key':
-                comment = f"Foreign key from {upstream_col.get('Artifact Name', 'upstream')}"
-            elif upstream_relation == 'lookup':
-                comment = f"Lookup field from {upstream_col.get('Artifact Name', 'upstream')}"
-            else:
-                comment = upstream_col.get('Column Comment', '')
+            converted_type = self._convert_data_type(processed_col['Data Type'], target_platform)
             
             new_column = {
                 'Stage Name': target_stage_name,
                 'Artifact ID': target_artifact_id,
                 'Artifact Name': target_artifact_name,
-                'Column ID': self._get_next_column_id(),  # Globally unique ID
-                'Column Name': col_name,
-                'Order': ordinal,
+                'Column ID': self._get_next_column_id(),
+                'Column Name': processed_col['Column Name'],
+                'Order': processed_col.get('Order', ordinal),
                 'Data Type': converted_type,
-                'Column Comment': comment,
-                'Column Business Name ': upstream_col.get('Column Business Name ', ''),  # CASCADE business names
-                'Column Group': column_group
+                'Column Comment': processed_col.get('Column Comment', ''),
+                'Column Business Name ': processed_col.get('Column Business Name', ''),
+                'Column Group': processed_col.get('Column Group', 'attributes')
             }
             new_columns.append(new_column)
             ordinal += 1
         
-        # Add technical fields for the target stage (if requested and not PBI relation)
-        if include_technical_fields and upstream_relation != 'pbi':
-            # Get technical fields that belong to THIS stage
-            stage_technical_fields = self._get_technical_fields_for_stage(target_stage_name, target_platform)
-            for tech_field in stage_technical_fields:
-                # Only add fields marked for inclusion in technical fields
-                if tech_field.get('include_in_tech_fields', False):
-                    new_column = {
-                        'Stage Name': target_stage_name,
-                        'Artifact ID': target_artifact_id,
-                        'Artifact Name': target_artifact_name,
-                        'Column ID': self._get_next_column_id(),  # Globally unique ID
-                        'Column Name': tech_field['column_name'],
-                        'Order': ordinal,
-                        'Data Type': tech_field['data_type'],
-                        'Column Comment': f"Technical field for {target_stage_name} stage",
-                        'Column Business Name ': '',
-                        'Column Group': 'technical_fields'
-                    }
-                    new_columns.append(new_column)
-                    ordinal += 1
-                
-        elif upstream_relation == 'pbi':
-            # PBI relation: no cascading, this is for Power BI relationships only
-            self.logger.info(f"PBI relation detected for {target_artifact_id}, no column cascading performed")
-        
-        # Apply column hierarchy ordering before returning
+        # Apply legacy column hierarchy ordering for compatibility
         new_columns = self._reorder_columns_by_hierarchy(new_columns)
-            
+        
         return new_columns
+    
+    def _get_target_platform(self, stages_df: pd.DataFrame, target_stage_name: str) -> str:
+        """Get target platform for data type conversion."""
+        target_stage_row = stages_df[stages_df['Stage Name'] == target_stage_name]
+        return target_stage_row.iloc[0]['Platform '].strip() if not target_stage_row.empty else 'Azure SQL'
     
     def _get_technical_fields_for_stage(self, stage_name: str, platform: str = 'Azure SQL') -> List[Dict]:
         """Get technical fields for a specific stage using stage_id."""
