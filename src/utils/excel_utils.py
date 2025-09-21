@@ -58,9 +58,11 @@ class ExcelUtils:
                     if isinstance(row_data, dict):
                         # Map dictionary data to columns
                         for col_idx, header in enumerate(headers, 1):
-                            # Convert header to snake_case key for lookup
-                            key = header.lower().replace(' ', '_')
-                            value = row_data.get(key, '')
+                            # Try exact header match first, then fallback to snake_case
+                            value = row_data.get(header, '')
+                            if not value:  # If exact match fails, try snake_case
+                                key = header.lower().replace(' ', '_')
+                                value = row_data.get(key, '')
                             ws.cell(row=row_idx, column=col_idx, value=value)
                     elif isinstance(row_data, list):
                         # Direct list data

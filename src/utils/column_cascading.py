@@ -1294,24 +1294,32 @@ class ColumnCascadingEngine:
     
     # ANCHOR: Configuration Management
     def create_cascading_config_file(self) -> bool:
-        """Create the cascading configuration file with default data."""
+        """Create the latest cascading configuration file with enhanced structure."""
         try:
-            # Create configuration workbook
+            # Enhanced configuration with updated structure for enhanced relation processing
             sheets_config = {
                 'DataTypeMappings': {
-                    'headers': ['SQL Server Data Type', 'Databricks SQL Data Type', 'Power BI Data Type'],
-                    'default_data': self.data_type_mappings.to_dict('records') if not self.data_type_mappings.empty else []
+                    'headers': ['Source_Data_Type', 'SQL_Server_Data_Type', 'Databricks_SQL_Data_Type', 'Power_BI_Data_Type', 'Notes'],
+                    'default_data': self._create_enhanced_data_type_mappings()
                 },
                 'TechnicalColumns': {
-                    'headers': ['Stage', 'Column Name', 'Data Type', 'Optional'],
-                    'default_data': self._flatten_technical_columns_config()
+                    'headers': ['Stage_ID', 'Stage_Name', 'Column_Name', 'Data_Type', 'include_in_tech_fields', 'Take_To_Next_Level', 'Artifact_Type_Specific', 'Description'],
+                    'default_data': self._create_enhanced_technical_columns()
+                },
+                'StageConfiguration': {
+                    'headers': ['Stage_ID', 'Stage_Name', 'Platform', 'Business_Side', 'Processing_Notes'],
+                    'default_data': self._create_stage_configuration()
+                },
+                'RelationTypes': {
+                    'headers': ['Relation_Type', 'Description', 'Processing_Logic', 'Field_Limit', 'Use_Cases'],
+                    'default_data': self._create_relation_types_config()
                 }
             }
             
             success = self.excel_utils.create_workbook_with_sheets(self.config_path, sheets_config)
             
             if success:
-                self.logger.info(f"Created cascading configuration file: {self.config_path}")
+                self.logger.info(f"Created enhanced cascading configuration file: {self.config_path}")
                 return True
             else:
                 self.logger.error("Failed to create cascading configuration file")
@@ -1320,16 +1328,146 @@ class ColumnCascadingEngine:
         except Exception as e:
             self.logger.error(f"Error creating cascading configuration file: {str(e)}")
             return False
-    
-    def _flatten_technical_columns_config(self) -> List[Dict]:
-        """Flatten technical columns config for Excel export."""
-        flattened = []
-        for stage, columns in self.technical_columns.items():
-            for col in columns:
-                flattened.append({
-                    'Stage': stage,
-                    'Column Name': col['column_name'],
-                    'Data Type': col['data_type'],
-                    'Optional': col['optional']
-                })
-        return flattened
+
+    def _create_enhanced_data_type_mappings(self) -> List[Dict]:
+        """Create enhanced data type mappings with all platforms."""
+        mappings = [
+            # Numeric Types
+            {"Source_Data_Type": "INT", "SQL_Server_Data_Type": "INT", "Databricks_SQL_Data_Type": "INT", "Power_BI_Data_Type": "INT64", "Notes": "Standard integer"},
+            {"Source_Data_Type": "BIGINT", "SQL_Server_Data_Type": "BIGINT", "Databricks_SQL_Data_Type": "BIGINT", "Power_BI_Data_Type": "INT64", "Notes": "Large integer"},
+            {"Source_Data_Type": "SMALLINT", "SQL_Server_Data_Type": "SMALLINT", "Databricks_SQL_Data_Type": "SMALLINT", "Power_BI_Data_Type": "INT64", "Notes": "Small integer"},
+            {"Source_Data_Type": "TINYINT", "SQL_Server_Data_Type": "TINYINT", "Databricks_SQL_Data_Type": "TINYINT", "Power_BI_Data_Type": "INT64", "Notes": "Tiny integer"},
+            {"Source_Data_Type": "BIT", "SQL_Server_Data_Type": "BIT", "Databricks_SQL_Data_Type": "BOOLEAN", "Power_BI_Data_Type": "Boolean", "Notes": "Boolean flag"},
+            {"Source_Data_Type": "DECIMAL", "SQL_Server_Data_Type": "DECIMAL(18,2)", "Databricks_SQL_Data_Type": "DECIMAL(18,2)", "Power_BI_Data_Type": "Decimal", "Notes": "Precise decimal"},
+            {"Source_Data_Type": "NUMERIC", "SQL_Server_Data_Type": "NUMERIC(18,2)", "Databricks_SQL_Data_Type": "NUMERIC(18,2)", "Power_BI_Data_Type": "Decimal", "Notes": "Numeric with precision"},
+            {"Source_Data_Type": "FLOAT", "SQL_Server_Data_Type": "FLOAT", "Databricks_SQL_Data_Type": "FLOAT", "Power_BI_Data_Type": "Double", "Notes": "Floating point"},
+            {"Source_Data_Type": "REAL", "SQL_Server_Data_Type": "REAL", "Databricks_SQL_Data_Type": "REAL", "Power_BI_Data_Type": "Double", "Notes": "Real number"},
+            {"Source_Data_Type": "MONEY", "SQL_Server_Data_Type": "MONEY", "Databricks_SQL_Data_Type": "DECIMAL(19,4)", "Power_BI_Data_Type": "Decimal", "Notes": "Currency values"},
+            
+            # String Types
+            {"Source_Data_Type": "CHAR", "SQL_Server_Data_Type": "CHAR(255)", "Databricks_SQL_Data_Type": "CHAR(255)", "Power_BI_Data_Type": "String", "Notes": "Fixed length char"},
+            {"Source_Data_Type": "VARCHAR", "SQL_Server_Data_Type": "VARCHAR(MAX)", "Databricks_SQL_Data_Type": "STRING", "Power_BI_Data_Type": "String", "Notes": "Variable length string"},
+            {"Source_Data_Type": "TEXT", "SQL_Server_Data_Type": "NVARCHAR(MAX)", "Databricks_SQL_Data_Type": "STRING", "Power_BI_Data_Type": "String", "Notes": "Large text"},
+            {"Source_Data_Type": "NCHAR", "SQL_Server_Data_Type": "NCHAR(255)", "Databricks_SQL_Data_Type": "STRING", "Power_BI_Data_Type": "String", "Notes": "Unicode fixed char"},
+            {"Source_Data_Type": "NVARCHAR", "SQL_Server_Data_Type": "NVARCHAR(MAX)", "Databricks_SQL_Data_Type": "STRING", "Power_BI_Data_Type": "String", "Notes": "Unicode variable string"},
+            {"Source_Data_Type": "NTEXT", "SQL_Server_Data_Type": "NVARCHAR(MAX)", "Databricks_SQL_Data_Type": "STRING", "Power_BI_Data_Type": "String", "Notes": "Unicode large text"},
+            
+            # Date/Time Types
+            {"Source_Data_Type": "DATE", "SQL_Server_Data_Type": "DATE", "Databricks_SQL_Data_Type": "DATE", "Power_BI_Data_Type": "Date", "Notes": "Date only"},
+            {"Source_Data_Type": "DATETIME", "SQL_Server_Data_Type": "DATETIME", "Databricks_SQL_Data_Type": "TIMESTAMP", "Power_BI_Data_Type": "DateTime", "Notes": "Date and time"},
+            {"Source_Data_Type": "DATETIME2", "SQL_Server_Data_Type": "DATETIME2", "Databricks_SQL_Data_Type": "TIMESTAMP", "Power_BI_Data_Type": "DateTime", "Notes": "Enhanced datetime"},
+            {"Source_Data_Type": "SMALLDATETIME", "SQL_Server_Data_Type": "SMALLDATETIME", "Databricks_SQL_Data_Type": "TIMESTAMP", "Power_BI_Data_Type": "DateTime", "Notes": "Small datetime"},
+            {"Source_Data_Type": "TIME", "SQL_Server_Data_Type": "TIME", "Databricks_SQL_Data_Type": "TIME", "Power_BI_Data_Type": "Time", "Notes": "Time only"},
+            {"Source_Data_Type": "TIMESTAMP", "SQL_Server_Data_Type": "DATETIME2", "Databricks_SQL_Data_Type": "TIMESTAMP", "Power_BI_Data_Type": "DateTime", "Notes": "Timestamp"},
+            
+            # Binary Types  
+            {"Source_Data_Type": "BINARY", "SQL_Server_Data_Type": "BINARY(8000)", "Databricks_SQL_Data_Type": "BINARY", "Power_BI_Data_Type": "Binary", "Notes": "Fixed binary"},
+            {"Source_Data_Type": "VARBINARY", "SQL_Server_Data_Type": "VARBINARY(MAX)", "Databricks_SQL_Data_Type": "BINARY", "Power_BI_Data_Type": "Binary", "Notes": "Variable binary"},
+            {"Source_Data_Type": "IMAGE", "SQL_Server_Data_Type": "VARBINARY(MAX)", "Databricks_SQL_Data_Type": "BINARY", "Power_BI_Data_Type": "Binary", "Notes": "Image/blob data"},
+            
+            # Special Types
+            {"Source_Data_Type": "UNIQUEIDENTIFIER", "SQL_Server_Data_Type": "UNIQUEIDENTIFIER", "Databricks_SQL_Data_Type": "STRING", "Power_BI_Data_Type": "String", "Notes": "GUID/UUID"},
+            {"Source_Data_Type": "XML", "SQL_Server_Data_Type": "XML", "Databricks_SQL_Data_Type": "STRING", "Power_BI_Data_Type": "String", "Notes": "XML data"},
+            {"Source_Data_Type": "JSON", "SQL_Server_Data_Type": "NVARCHAR(MAX)", "Databricks_SQL_Data_Type": "STRING", "Power_BI_Data_Type": "String", "Notes": "JSON data"}
+        ]
+        return mappings
+
+    def _create_enhanced_technical_columns(self) -> List[Dict]:
+        """Create enhanced technical columns configuration using the ACTUAL column names from the original config."""
+        columns = [
+            # Bronze stage technical fields (using original naming)
+            {"Stage_ID": "s1", "Stage_Name": "bronze", "Column_Name": "__SourceSystem", "Data_Type": "STRING", "include_in_tech_fields": False, "Take_To_Next_Level": True, "Artifact_Type_Specific": "all", "Description": "Source system identifier"},
+            {"Stage_ID": "s1", "Stage_Name": "bronze", "Column_Name": "__SourceFileName", "Data_Type": "STRING", "include_in_tech_fields": False, "Take_To_Next_Level": True, "Artifact_Type_Specific": "all", "Description": "Original source file name"},
+            {"Stage_ID": "s1", "Stage_Name": "bronze", "Column_Name": "__SourceFilePath", "Data_Type": "STRING", "include_in_tech_fields": False, "Take_To_Next_Level": True, "Artifact_Type_Specific": "all", "Description": "Source file path"},
+            {"Stage_ID": "s1", "Stage_Name": "bronze", "Column_Name": "__bronze_insertDT", "Data_Type": "TIMESTAMP", "include_in_tech_fields": False, "Take_To_Next_Level": True, "Artifact_Type_Specific": "all", "Description": "Bronze insertion timestamp"},
+            {"Stage_ID": "s1", "Stage_Name": "bronze", "Column_Name": "__bronzePartition_InsertYear", "Data_Type": "INT", "include_in_tech_fields": False, "Take_To_Next_Level": False, "Artifact_Type_Specific": "all", "Description": "Partition year for bronze data"},
+            {"Stage_ID": "s1", "Stage_Name": "bronze", "Column_Name": "__bronzePartition_InsertMonth", "Data_Type": "INT", "include_in_tech_fields": False, "Take_To_Next_Level": False, "Artifact_Type_Specific": "all", "Description": "Partition month for bronze data"},
+            {"Stage_ID": "s1", "Stage_Name": "bronze", "Column_Name": "__bronzePartition_insertDate", "Data_Type": "INT", "include_in_tech_fields": False, "Take_To_Next_Level": False, "Artifact_Type_Specific": "all", "Description": "Partition date for bronze data"},
+            {"Stage_ID": "s1", "Stage_Name": "bronze", "Column_Name": "__bronze_hash", "Data_Type": "STRING", "include_in_tech_fields": True, "Take_To_Next_Level": False, "Artifact_Type_Specific": "all", "Description": "Data hash for change detection"},
+            {"Stage_ID": "s1", "Stage_Name": "bronze", "Column_Name": "__bronze_status", "Data_Type": "STRING", "include_in_tech_fields": True, "Take_To_Next_Level": False, "Artifact_Type_Specific": "all", "Description": "Processing status"},
+            
+            # Silver stage technical fields (using original naming)
+            {"Stage_ID": "s2", "Stage_Name": "silver", "Column_Name": "__silver_lastChanged_DT", "Data_Type": "TIMESTAMP", "include_in_tech_fields": False, "Take_To_Next_Level": True, "Artifact_Type_Specific": "all", "Description": "Silver last changed timestamp"},
+            {"Stage_ID": "s2", "Stage_Name": "silver", "Column_Name": "__silverPartition_xxxYear", "Data_Type": "INT", "include_in_tech_fields": True, "Take_To_Next_Level": False, "Artifact_Type_Specific": "all", "Description": "Silver partition year (xxx = business date field)"},
+            {"Stage_ID": "s2", "Stage_Name": "silver", "Column_Name": "__silverPartition_xxxMonth", "Data_Type": "INT", "include_in_tech_fields": True, "Take_To_Next_Level": False, "Artifact_Type_Specific": "all", "Description": "Silver partition month (xxx = business date field)"},
+            {"Stage_ID": "s2", "Stage_Name": "silver", "Column_Name": "__silverPartition_xxxDate", "Data_Type": "INT", "include_in_tech_fields": True, "Take_To_Next_Level": False, "Artifact_Type_Specific": "all", "Description": "Silver partition date (xxx = business date field)"},
+            {"Stage_ID": "s2", "Stage_Name": "silver", "Column_Name": "__silver_validFrom", "Data_Type": "TIMESTAMP", "include_in_tech_fields": True, "Take_To_Next_Level": True, "Artifact_Type_Specific": "dimension", "Description": "Valid from timestamp for SCD Type 2"},
+            {"Stage_ID": "s2", "Stage_Name": "silver", "Column_Name": "__silver_validTo", "Data_Type": "TIMESTAMP", "include_in_tech_fields": True, "Take_To_Next_Level": True, "Artifact_Type_Specific": "dimension", "Description": "Valid to timestamp for SCD Type 2"},
+            {"Stage_ID": "s2", "Stage_Name": "silver", "Column_Name": "__silver_isCurrent", "Data_Type": "BOOLEAN", "include_in_tech_fields": True, "Take_To_Next_Level": True, "Artifact_Type_Specific": "dimension", "Description": "Current record flag for SCD Type 2"},
+            {"Stage_ID": "s2", "Stage_Name": "silver", "Column_Name": "__silver_hash", "Data_Type": "STRING", "include_in_tech_fields": True, "Take_To_Next_Level": False, "Artifact_Type_Specific": "all", "Description": "Data hash for change detection"},
+            
+            # Gold stage technical fields (using original naming)
+            {"Stage_ID": "s3", "Stage_Name": "gold", "Column_Name": "__gold_lastChanged_DT", "Data_Type": "TIMESTAMP", "include_in_tech_fields": False, "Take_To_Next_Level": True, "Artifact_Type_Specific": "all", "Description": "Gold last changed timestamp"},
+            {"Stage_ID": "s3", "Stage_Name": "gold", "Column_Name": "__goldPartition_XXXYear", "Data_Type": "INT", "include_in_tech_fields": True, "Take_To_Next_Level": False, "Artifact_Type_Specific": "all", "Description": "Gold partition year (XXX = business date field)"},
+            {"Stage_ID": "s3", "Stage_Name": "gold", "Column_Name": "__goldPartition_XXXMonth", "Data_Type": "INT", "include_in_tech_fields": True, "Take_To_Next_Level": False, "Artifact_Type_Specific": "all", "Description": "Gold partition month (XXX = business date field)"},
+            {"Stage_ID": "s3", "Stage_Name": "gold", "Column_Name": "__goldPartition_XXXDate", "Data_Type": "INT", "include_in_tech_fields": True, "Take_To_Next_Level": False, "Artifact_Type_Specific": "all", "Description": "Gold partition date (XXX = business date field)"},
+            {"Stage_ID": "s3", "Stage_Name": "gold", "Column_Name": "__gold_aggregation_level", "Data_Type": "STRING", "include_in_tech_fields": True, "Take_To_Next_Level": True, "Artifact_Type_Specific": "fact", "Description": "Aggregation level for fact tables"},
+            {"Stage_ID": "s3", "Stage_Name": "gold", "Column_Name": "__gold_measure_type", "Data_Type": "STRING", "include_in_tech_fields": True, "Take_To_Next_Level": True, "Artifact_Type_Specific": "fact", "Description": "Measure type classification"},
+            {"Stage_ID": "s3", "Stage_Name": "gold", "Column_Name": "__gold_quality_score", "Data_Type": "DECIMAL", "include_in_tech_fields": True, "Take_To_Next_Level": False, "Artifact_Type_Specific": "all", "Description": "Data quality score"},
+            
+            # Audit fields for bronze stage
+            {"Stage_ID": "s1", "Stage_Name": "bronze", "Column_Name": "__audit_created_by", "Data_Type": "STRING", "include_in_tech_fields": True, "Take_To_Next_Level": True, "Artifact_Type_Specific": "all", "Description": "Created by user/process"},
+            {"Stage_ID": "s1", "Stage_Name": "bronze", "Column_Name": "__audit_created_date", "Data_Type": "TIMESTAMP", "include_in_tech_fields": True, "Take_To_Next_Level": True, "Artifact_Type_Specific": "all", "Description": "Created date"},
+            {"Stage_ID": "s1", "Stage_Name": "bronze", "Column_Name": "__audit_modified_by", "Data_Type": "STRING", "include_in_tech_fields": True, "Take_To_Next_Level": True, "Artifact_Type_Specific": "all", "Description": "Modified by user/process"},
+            {"Stage_ID": "s1", "Stage_Name": "bronze", "Column_Name": "__audit_modified_date", "Data_Type": "TIMESTAMP", "include_in_tech_fields": True, "Take_To_Next_Level": True, "Artifact_Type_Specific": "all", "Description": "Modified date"},
+            
+            # Audit fields for silver stage
+            {"Stage_ID": "s2", "Stage_Name": "silver", "Column_Name": "__audit_created_by", "Data_Type": "STRING", "include_in_tech_fields": True, "Take_To_Next_Level": True, "Artifact_Type_Specific": "all", "Description": "Created by user/process"},
+            {"Stage_ID": "s2", "Stage_Name": "silver", "Column_Name": "__audit_created_date", "Data_Type": "TIMESTAMP", "include_in_tech_fields": True, "Take_To_Next_Level": True, "Artifact_Type_Specific": "all", "Description": "Created date"},
+            {"Stage_ID": "s2", "Stage_Name": "silver", "Column_Name": "__audit_modified_by", "Data_Type": "STRING", "include_in_tech_fields": True, "Take_To_Next_Level": True, "Artifact_Type_Specific": "all", "Description": "Modified by user/process"},
+            {"Stage_ID": "s2", "Stage_Name": "silver", "Column_Name": "__audit_modified_date", "Data_Type": "TIMESTAMP", "include_in_tech_fields": True, "Take_To_Next_Level": True, "Artifact_Type_Specific": "all", "Description": "Modified date"},
+            
+            # Audit fields for gold stage
+            {"Stage_ID": "s3", "Stage_Name": "gold", "Column_Name": "__audit_created_by", "Data_Type": "STRING", "include_in_tech_fields": True, "Take_To_Next_Level": True, "Artifact_Type_Specific": "all", "Description": "Created by user/process"},
+            {"Stage_ID": "s3", "Stage_Name": "gold", "Column_Name": "__audit_created_date", "Data_Type": "TIMESTAMP", "include_in_tech_fields": True, "Take_To_Next_Level": True, "Artifact_Type_Specific": "all", "Description": "Created date"},
+            {"Stage_ID": "s3", "Stage_Name": "gold", "Column_Name": "__audit_modified_by", "Data_Type": "STRING", "include_in_tech_fields": True, "Take_To_Next_Level": True, "Artifact_Type_Specific": "all", "Description": "Modified by user/process"},
+            {"Stage_ID": "s3", "Stage_Name": "gold", "Column_Name": "__audit_modified_date", "Data_Type": "TIMESTAMP", "include_in_tech_fields": True, "Take_To_Next_Level": True, "Artifact_Type_Specific": "all", "Description": "Modified date"}
+        ]
+        return columns
+
+    def _create_stage_configuration(self) -> List[Dict]:
+        """Create stage configuration for enhanced processing."""
+        stages = [
+            {"Stage_ID": "s0", "Stage_Name": "0_drop_zone", "Platform": "Azure SQL", "Business_Side": "source", "Processing_Notes": "Raw data ingestion, minimal processing"},
+            {"Stage_ID": "s1", "Stage_Name": "1_bronze", "Platform": "Azure SQL", "Business_Side": "source", "Processing_Notes": "Raw storage with basic structure"},
+            {"Stage_ID": "s2", "Stage_Name": "2_silver", "Platform": "Azure SQL", "Business_Side": "business", "Processing_Notes": "Cleaned and validated, SCD implementation"},
+            {"Stage_ID": "s3", "Stage_Name": "3_gold", "Platform": "Azure SQL", "Business_Side": "business", "Processing_Notes": "Business ready, conformed dimensions"},
+            {"Stage_ID": "s4", "Stage_Name": "4_mart", "Platform": "Azure SQL", "Business_Side": "business", "Processing_Notes": "Analytical marts and aggregations"},
+            {"Stage_ID": "s5", "Stage_Name": "5_PBI_Model", "Platform": "Power BI", "Business_Side": "business", "Processing_Notes": "Power BI optimized model"},
+            {"Stage_ID": "s6", "Stage_Name": "6_PBI_Reports", "Platform": "Power BI", "Business_Side": "business", "Processing_Notes": "Report layer definitions"}
+        ]
+        return stages
+
+    def _create_relation_types_config(self) -> List[Dict]:
+        """Create relation types configuration for enhanced processing."""
+        relations = [
+            {
+                "Relation_Type": "main", 
+                "Description": "Full column propagation with technical fields", 
+                "Processing_Logic": "Context-aware processing based on artifact type and stage transition", 
+                "Field_Limit": "No limit", 
+                "Use_Cases": "Standard column cascading between stages"
+            },
+            {
+                "Relation_Type": "get_key", 
+                "Description": "Dimension key propagation for fact tables", 
+                "Processing_Logic": "Extracts surrogate keys (SKs) and business keys (BKs) only", 
+                "Field_Limit": "Keys only", 
+                "Use_Cases": "Foreign key relationships in fact tables"
+            },
+            {
+                "Relation_Type": "lookup", 
+                "Description": "Limited column lookup with priority-based selection", 
+                "Processing_Logic": "Priority order: SKs → BKs → Attributes, configurable limit", 
+                "Field_Limit": "3 (default)", 
+                "Use_Cases": "Reference lookups and denormalization"
+            },
+            {
+                "Relation_Type": "pbi", 
+                "Description": "Power BI specific minimal cascading", 
+                "Processing_Logic": "Keys and facts only for analytical performance", 
+                "Field_Limit": "Keys + Facts", 
+                "Use_Cases": "Power BI model optimization"
+            }
+        ]
+        return relations
