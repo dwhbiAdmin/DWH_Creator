@@ -123,8 +123,8 @@ class ColumnCascadingEngine:
             
             # Clear existing columns
             empty_columns_df = pd.DataFrame(columns=[
-                'Stage Name', 'Artifact ID', 'Artifact Name', 'Column ID', 'Column Name',
-                'Order', 'Data Type', 'Column Comment', 'Column Business Name ', 'Column Group'
+                'stage_id', 'stage_name', 'artifact_id', 'artifact_name', 'column_id', 'column_name',
+                'order', 'data_type', 'column_comment', 'column_business_name', 'column_group'
             ])
             
             # Save empty columns sheet
@@ -135,20 +135,20 @@ class ColumnCascadingEngine:
             self.logger.info("Cleared existing columns, starting regeneration")
             
             # Get all artifacts that need columns
-            all_artifact_ids = artifacts_df['Artifact ID'].tolist()
+            all_artifact_ids = artifacts_df['artifact_id'].tolist()
             
             # Identify source artifacts (those without upstream relationships)
             source_artifacts = []
             downstream_artifacts = []
             
             for _, artifact in artifacts_df.iterrows():
-                upstream_rel = artifact.get('Upstream Relation', '')
-                upstream_artifact = artifact.get('Upstream Artifact', '')
+                upstream_rel = artifact.get('upstream_relation', '')
+                upstream_artifact = artifact.get('upstream_artifact', '')
                 
                 if pd.isna(upstream_rel) or upstream_rel == '' or pd.isna(upstream_artifact) or upstream_artifact == '':
-                    source_artifacts.append(artifact['Artifact ID'])
+                    source_artifacts.append(artifact['artifact_id'])
                 else:
-                    downstream_artifacts.append(artifact['Artifact ID'])
+                    downstream_artifacts.append(artifact['artifact_id'])
             
             processed_artifacts = set()
             regeneration_count = 0
@@ -175,11 +175,11 @@ class ColumnCascadingEngine:
                         continue
                         
                     # Find the upstream artifact for this one
-                    artifact_row = artifacts_df[artifacts_df['Artifact ID'] == artifact_id]
+                    artifact_row = artifacts_df[artifacts_df['artifact_id'] == artifact_id]
                     if artifact_row.empty:
                         continue
                         
-                    upstream_artifact = artifact_row.iloc[0].get('Upstream Artifact', '')
+                    upstream_artifact = artifact_row.iloc[0].get('upstream_artifact', '')
                     
                     # Check if upstream is processed (or doesn't exist)
                     if pd.isna(upstream_artifact) or upstream_artifact == '' or upstream_artifact in processed_artifacts:
@@ -230,8 +230,8 @@ class ColumnCascadingEngine:
             columns_df = self.excel_utils.read_sheet_data(self.workbook_path, "Columns")
             
             # Find artifacts that have no columns
-            artifacts_with_columns = set(columns_df['Artifact ID'].unique())
-            all_artifacts = set(artifacts_df['Artifact ID'].unique())
+            artifacts_with_columns = set(columns_df['artifact_id'].unique())
+            all_artifacts = set(artifacts_df['artifact_id'].unique())
             missing_artifacts = all_artifacts - artifacts_with_columns
             
             if not missing_artifacts:
@@ -296,9 +296,9 @@ class ColumnCascadingEngine:
         ]
         
         return pd.DataFrame(mappings, columns=[
-            "SQL Server Data Type",
-            "Databricks SQL Data Type", 
-            "Power BI Data Type"
+            "sql_server",
+            "databricks", 
+            "power_bi"
         ])
     
     def _load_technical_columns_config(self) -> Dict:
@@ -313,8 +313,8 @@ class ColumnCascadingEngine:
             for _, row in df.iterrows():
                 stage_id = row.get('Stage_ID', '')
                 stage = row.get('Stage', '')
-                column_name = row.get('Column Name', '')
-                data_type = row.get('Data Type', '')
+                column_name = row.get('column_name', '')
+                data_type = row.get('data_type', '')
                 include_in_tech_fields = row.get('include_in_tech_fields', False)
                 take_to_next_level = row.get('Take_To_Next_Level', True)
                 
@@ -383,7 +383,7 @@ class ColumnCascadingEngine:
             stages_df = self.excel_utils.read_sheet_data(self.workbook_path, "Stages")
             
             # Find the target artifact
-            target_artifact_row = artifacts_df[artifacts_df['Artifact ID'] == artifact_id]
+            target_artifact_row = artifacts_df[artifacts_df['artifact_id'] == artifact_id]
             if target_artifact_row.empty:
                 self.logger.error(f"Artifact {artifact_id} not found")
                 return False
@@ -391,14 +391,14 @@ class ColumnCascadingEngine:
             target_artifact = target_artifact_row.iloc[0]
             
             # Check if artifact already has columns
-            existing_columns = columns_df[columns_df['Artifact ID'] == artifact_id]
+            existing_columns = columns_df[columns_df['artifact_id'] == artifact_id]
             if not existing_columns.empty:
                 self.logger.info(f"Artifact {artifact_id} already has columns, skipping")
                 return True
             
             # Get upstream relationship information
-            upstream_artifact_id = target_artifact.get('Upstream Artifact', '')
-            upstream_relation = target_artifact.get('Upstream Relation', '')
+            upstream_artifact_id = target_artifact.get('upstream_artifact', '')
+            upstream_relation = target_artifact.get('upstream_relation', '')
             
             # Handle NaN values that come as float
             if pd.isna(upstream_relation):
@@ -427,7 +427,7 @@ class ColumnCascadingEngine:
             
             # Process each upstream artifact with its specific relation type
             for upstream_id, relation_type in zip(upstream_artifact_ids, upstream_relation_types):
-                upstream_artifact_columns = columns_df[columns_df['Artifact ID'] == upstream_id]
+                upstream_artifact_columns = columns_df[columns_df['artifact_id'] == upstream_id]
                 if upstream_artifact_columns.empty:
                     self.logger.warning(f"No columns found for upstream artifact {upstream_id}")
                     continue
@@ -540,32 +540,32 @@ class ColumnCascadingEngine:
         
         # First column: Surrogate Key
         sk_column = {
-            'Stage Name': target_stage_name,
-            'Artifact ID': target_artifact_id,
-            'Artifact Name': artifact_name,
-            'Column ID': self._get_next_column_id(),
-            'Column Name': f"{dim_name}_SK",
-            'Order': ordinal,
-            'Data Type': 'BIGINT',
-            'Column Comment': f'Surrogate key for {dim_name} dimension',
-            'Column Business Name ': f'{dim_name}_SK',
-            'Column Group': 'SKs'
+            'stage_name': target_stage_name,
+            'artifact_id': target_artifact_id,
+            'artifact_name': artifact_name,
+            'column_id': self._get_next_column_id(),
+            'column_name': f"{dim_name}_SK",
+            'order': ordinal,
+            'data_type': 'BIGINT',
+            'column_comment': f'Surrogate key for {dim_name} dimension',
+            'column_business_name': f'{dim_name}_SK',
+            'column_group': 'SKs'
         }
         key_columns.append(sk_column)
         ordinal += 1
         
         # Second column: Business Key
         bk_column = {
-            'Stage Name': target_stage_name,
-            'Artifact ID': target_artifact_id,
-            'Artifact Name': artifact_name,
-            'Column ID': self._get_next_column_id(),
-            'Column Name': f"{dim_name}_BK",
-            'Order': ordinal,
-            'Data Type': 'BIGINT',
-            'Column Comment': f'Business key for {dim_name} dimension',
-            'Column Business Name ': f'{dim_name}_BK',
-            'Column Group': 'BKs'
+            'stage_name': target_stage_name,
+            'artifact_id': target_artifact_id,
+            'artifact_name': artifact_name,
+            'column_id': self._get_next_column_id(),
+            'column_name': f"{dim_name}_BK",
+            'order': ordinal,
+            'data_type': 'BIGINT',
+            'column_comment': f'Business key for {dim_name} dimension',
+            'column_business_name': f'{dim_name}_BK',
+            'column_group': 'BKs'
         }
         key_columns.append(bk_column)
         ordinal += 1
@@ -645,13 +645,13 @@ class ColumnCascadingEngine:
             List[Dict]: List of new column definitions
         """
         # Get target artifact information
-        target_artifact_id = target_artifact['Artifact ID']
-        target_artifact_name = target_artifact['Artifact Name']
-        target_stage_name = target_artifact['Stage Name']
-        target_artifact_type_field = target_artifact.get('Artifact Type', '')
+        target_artifact_id = target_artifact['artifact_id']
+        target_artifact_name = target_artifact['artifact_name']
+        target_stage_name = target_artifact['stage_name']
+        target_artifact_type_field = target_artifact.get('artifact_type', '')
         
         # Get source stage for context-aware processing
-        source_stage_name = upstream_columns.iloc[0]['Stage Name'] if not upstream_columns.empty else ''
+        source_stage_name = upstream_columns.iloc[0]['stage_name'] if not upstream_columns.empty else ''
         
         # Map stage names to stage IDs for RelationProcessor
         stage_name_to_id = {
@@ -679,14 +679,14 @@ class ColumnCascadingEngine:
         source_columns = []
         for _, col in upstream_columns.iterrows():
             source_columns.append({
-                'Column Name': col['Column Name'],
-                'Data Type': col['Data Type'],
-                'Column Group': col.get('Column Group', 'attributes'),
-                'Column Comment': col.get('Column Comment', ''),
-                'Column Business Name': col.get('Column Business Name ', ''),
-                'Order': col.get('Order', 0),
-                'Artifact Name': col.get('Artifact Name', ''),
-                'Stage Name': col.get('Stage Name', '')
+                'column_name': col['column_name'],
+                'data_type': col['data_type'],
+                'column_group': col.get('column_group', 'attributes'),
+                'column_comment': col.get('column_comment', ''),
+                'column_business_name': col.get('column_business_name', ''),
+                'order': col.get('order', 0),
+                'artifact_name': col.get('artifact_name', ''),
+                'stage_name': col.get('stage_name', '')
             })
         
         # Use RelationProcessor for enhanced deterministic processing
@@ -717,19 +717,20 @@ class ColumnCascadingEngine:
         
         for processed_col in processed_columns:
             # Convert data type for target platform
-            converted_type = self._convert_data_type(processed_col['Data Type'], target_platform)
+            converted_type = self._convert_data_type(processed_col['data_type'], target_platform)
             
             new_column = {
-                'Stage Name': target_stage_name,
-                'Artifact ID': target_artifact_id,
-                'Artifact Name': target_artifact_name,
-                'Column ID': self._get_next_column_id(),
-                'Column Name': processed_col['Column Name'],
-                'Order': processed_col.get('Order', ordinal),
-                'Data Type': converted_type,
-                'Column Comment': processed_col.get('Column Comment', ''),
-                'Column Business Name ': processed_col.get('Column Business Name', ''),
-                'Column Group': processed_col.get('Column Group', 'attributes')
+                'stage_id': target_stage_id,
+                'stage_name': target_stage_name,
+                'artifact_id': target_artifact_id,
+                'artifact_name': target_artifact_name,
+                'column_id': self._get_next_column_id(),
+                'column_name': processed_col['column_name'],
+                'order': processed_col.get('order', ordinal),
+                'data_type': converted_type,
+                'column_comment': processed_col.get('Column Comment', ''),
+                'column_business_name': processed_col.get('Column Business Name', ''),
+                'column_group': processed_col.get('Column Group', 'attributes')
             }
             new_columns.append(new_column)
             ordinal += 1
@@ -737,12 +738,89 @@ class ColumnCascadingEngine:
         # Apply legacy column hierarchy ordering for compatibility
         new_columns = self._reorder_columns_by_hierarchy(new_columns)
         
+        # Apply primary key propagation logic for source-side artifacts
+        new_columns = self._apply_primary_key_propagation(new_columns, target_artifact, stages_df)
+        
         return new_columns
+    
+    def _apply_primary_key_propagation(self, columns: List[Dict], target_artifact: pd.Series, 
+                                     stages_df: pd.DataFrame) -> List[Dict]:
+        """
+        Apply primary key propagation logic for source-side artifacts.
+        
+        Primary keys propagate downstream to all source-side artifacts.
+        Business-side artifacts may have different primary key strategies.
+        
+        Args:
+            columns: List of column dictionaries
+            target_artifact: Target artifact information
+            stages_df: Stage configuration DataFrame
+            
+        Returns:
+            List[Dict]: Updated columns with primary key propagation applied
+        """
+        try:
+            target_stage_name = target_artifact['stage_name']
+            
+            # Get stage configuration to determine artifact side
+            stage_config = None
+            if hasattr(self, 'cascading_configs') and 'StageConfiguration' in self.cascading_configs:
+                stage_df = self.cascading_configs['StageConfiguration']
+                stage_row = stage_df[stage_df['Stage_Name'] == target_stage_name]
+                if not stage_row.empty:
+                    stage_config = stage_row.iloc[0]
+            
+            # If no stage config found, try to determine from stage name patterns
+            artifact_side = None
+            if stage_config is not None:
+                artifact_side = stage_config.get('Artifact_Side', 'unknown')
+            else:
+                # Fallback logic based on stage naming patterns
+                if target_stage_name in ['0_drop_zone', '1_bronze']:
+                    artifact_side = 'source'
+                elif target_stage_name in ['2_silver', '3_gold', '4_mart', '5_PBI_Model', '6_PBI_Reports']:
+                    artifact_side = 'business'
+                else:
+                    artifact_side = 'unknown'
+            
+            self.logger.info(f"Primary key propagation for {target_stage_name}: artifact_side={artifact_side}")
+            
+            # Apply primary key propagation logic
+            if artifact_side == 'source':
+                # For source-side artifacts, primary keys should propagate downstream
+                for column in columns:
+                    if column.get('Column Group', '').lower() in ['primary_key', 'primarykey', 'pk']:
+                        # Ensure primary key columns maintain their group classification
+                        column['Column Group'] = 'primary_key'
+                        
+                        # Primary keys get highest priority in ordering
+                        current_order = column.get('order', 999)
+                        # Ensure primary keys come first (order 0-10 range)
+                        if current_order > 10:
+                            column['order'] = 1
+                        
+                        self.logger.info(f"Primary key propagated: {column['column_name']} (order: {column['order']})")
+            
+            elif artifact_side == 'business':
+                # For business-side artifacts, primary key handling might be different
+                # Could implement surrogate key generation or other business logic here
+                for column in columns:
+                    if column.get('Column Group', '').lower() in ['primary_key', 'primarykey', 'pk']:
+                        # Business side might transform primary keys to business keys or maintain them
+                        # For now, maintain the primary key designation
+                        column['Column Group'] = 'primary_key'
+                        self.logger.info(f"Primary key maintained in business layer: {column['column_name']}")
+            
+            return columns
+            
+        except Exception as e:
+            self.logger.warning(f"Error in primary key propagation: {str(e)}")
+            return columns
     
     def _get_target_platform(self, stages_df: pd.DataFrame, target_stage_name: str) -> str:
         """Get target platform for data type conversion."""
-        target_stage_row = stages_df[stages_df['Stage Name'] == target_stage_name]
-        return target_stage_row.iloc[0]['Platform '].strip() if not target_stage_row.empty else 'Azure SQL'
+        target_stage_row = stages_df[stages_df['stage_name'] == target_stage_name]
+        return target_stage_row.iloc[0]['platform'].strip() if not target_stage_row.empty else 'Azure SQL'
     
     def _get_technical_fields_for_stage(self, stage_name: str, platform: str = 'Azure SQL') -> List[Dict]:
         """Get technical fields for a specific stage using stage_id."""
@@ -787,7 +865,7 @@ class ColumnCascadingEngine:
         
         # Look for mapping in the DataFrame
         mapping_row = self.data_type_mappings[
-            self.data_type_mappings['SQL Server Data Type'].str.upper() == source_type_clean
+            self.data_type_mappings['sql_server'].str.upper() == source_type_clean
         ]
         
         if mapping_row.empty:
@@ -795,9 +873,9 @@ class ColumnCascadingEngine:
         
         # Map to target platform  
         if 'databricks' in target_platform.lower():
-            return mapping_row.iloc[0]['Databricks SQL Data Type']
+            return mapping_row.iloc[0]['databricks']
         elif 'power bi' in target_platform.lower():
-            return mapping_row.iloc[0]['Power BI Data Type']
+            return mapping_row.iloc[0]['power_bi']
         else:  # Default to source type for same platform
             return source_type
     
@@ -843,12 +921,12 @@ class ColumnCascadingEngine:
         if not upstream_artifacts:
             return new_columns
         
-        target_stage = target_artifact['Stage Name']
+        target_stage = target_artifact['stage_name']
         target_platform = self._get_stage_platform(target_stage, stages_df)
         
         for upstream_artifact in upstream_artifacts:
             # Get upstream columns (excluding partition fields)
-            upstream_columns = self._get_upstream_columns(upstream_artifact['Artifact ID'], columns_df, exclude_partition=True)
+            upstream_columns = self._get_upstream_columns(upstream_artifact['artifact_id'], columns_df, exclude_partition=True)
             
             # Add main columns with potential data type conversion
             for col in upstream_columns:
@@ -887,7 +965,7 @@ class ColumnCascadingEngine:
         new_columns = []
         
         # Only apply to fact tables in gold stage
-        if target_artifact['Stage Name'].lower() != 'gold':
+        if target_artifact['stage_name'].lower() != 'gold':
             return new_columns
         
         # Find upstream artifacts
@@ -895,7 +973,7 @@ class ColumnCascadingEngine:
         if not upstream_artifacts:
             return new_columns
         
-        target_platform = self._get_stage_platform(target_artifact['Stage Name'], stages_df)
+        target_platform = self._get_stage_platform(target_artifact['stage_name'], stages_df)
         ordinal_sk = 1
         ordinal_bk = 21
         
@@ -913,10 +991,10 @@ class ColumnCascadingEngine:
                 ordinal_bk += 1
             
             # Get first 3 fields of upstream node
-            upstream_columns = self._get_upstream_columns(upstream_artifact['Artifact ID'], columns_df, limit=3)
+            upstream_columns = self._get_upstream_columns(upstream_artifact['artifact_id'], columns_df, limit=3)
             for col in upstream_columns:
                 new_col = self._create_cascaded_column(
-                    col, target_artifact, target_artifact['Stage Name'], target_platform, stages_df
+                    col, target_artifact, target_artifact['stage_name'], target_platform, stages_df
                 )
                 new_columns.append(new_col)
         
@@ -939,15 +1017,15 @@ class ColumnCascadingEngine:
         if not upstream_artifacts:
             return new_columns
         
-        target_platform = self._get_stage_platform(target_artifact['Stage Name'], stages_df)
+        target_platform = self._get_stage_platform(target_artifact['stage_name'], stages_df)
         
         for upstream_artifact in upstream_artifacts:
             # Get first 3 fields of upstream node
-            upstream_columns = self._get_upstream_columns(upstream_artifact['Artifact ID'], columns_df, limit=3)
+            upstream_columns = self._get_upstream_columns(upstream_artifact['artifact_id'], columns_df, limit=3)
             
             for col in upstream_columns:
                 new_col = self._create_cascaded_column(
-                    col, target_artifact, target_artifact['Stage Name'], target_platform, stages_df
+                    col, target_artifact, target_artifact['stage_name'], target_platform, stages_df
                 )
                 new_columns.append(new_col)
         
@@ -961,7 +1039,7 @@ class ColumnCascadingEngine:
         Logic:
         - No impact on cascading (returns empty list)
         """
-        self.logger.info(f"PBI relation has no cascading impact for artifact {target_artifact['Artifact ID']}")
+        self.logger.info(f"PBI relation has no cascading impact for artifact {target_artifact['artifact_id']}")
         return []
     
     # ANCHOR: Helper Methods
@@ -978,7 +1056,7 @@ class ColumnCascadingEngine:
             upstream_ids = [id.strip() for id in str(upstream_ids_str).split(',') if id.strip()]
             
             for upstream_id in upstream_ids:
-                upstream_artifact = artifacts_df[artifacts_df['Artifact ID'] == upstream_id]
+                upstream_artifact = artifacts_df[artifacts_df['artifact_id'] == upstream_id]
                 if not upstream_artifact.empty:
                     upstream_artifacts.append(upstream_artifact.iloc[0])
                     
@@ -990,17 +1068,17 @@ class ColumnCascadingEngine:
     def _get_upstream_columns(self, artifact_id: str, columns_df: pd.DataFrame, 
                             exclude_partition: bool = False, limit: int = None) -> List[pd.Series]:
         """Get columns for an upstream artifact."""
-        artifact_columns = columns_df[columns_df['Artifact ID'] == artifact_id]
+        artifact_columns = columns_df[columns_df['artifact_id'] == artifact_id]
         
         if exclude_partition:
             # Exclude partition fields (containing 'Partition' in name)
             artifact_columns = artifact_columns[
-                ~artifact_columns['Column Name'].str.contains('Partition', case=False, na=False)
+                ~artifact_columns['column_name'].str.contains('Partition', case=False, na=False)
             ]
         
-        # Sort by Order if available
-        if 'Order' in artifact_columns.columns:
-            artifact_columns = artifact_columns.sort_values('Order')
+        # Sort by order if available
+        if 'order' in artifact_columns.columns:
+            artifact_columns = artifact_columns.sort_values('order')
         
         # Apply limit if specified
         if limit:
@@ -1016,7 +1094,7 @@ class ColumnCascadingEngine:
         source_platform = self._get_stage_platform(source_stage, stages_df)
         
         # Convert data type if platform changes
-        source_data_type = source_col.get('Data Type', '')
+        source_data_type = source_col.get('data_type', '')
         target_data_type = self._convert_data_type(source_data_type, target_platform)
         
         # Determine naming strategy based on stage side
@@ -1028,18 +1106,18 @@ class ColumnCascadingEngine:
         
         # Get next column ID and order
         next_id = self._get_next_column_id()
-        next_order = self._get_next_column_order(target_artifact['Artifact ID'])
+        next_order = self._get_next_column_order(target_artifact['artifact_id'])
         
         return {
-            'Column ID': next_id,
-            'Column Name': column_name,
-            'Artifact ID': target_artifact['Artifact ID'],
-            'Data Type': target_data_type,
-            'Column Business Name': self._generate_business_name(column_name),
-            'Column Comment': f"Cascaded from {source_col.get('Column Name', '')}",
-            'Order': next_order,
-            'Source Column': source_col.get('Column Name', ''),
-            'Cascaded': True
+            'column_id': next_id,
+            'column_name': column_name,
+            'artifact_id': target_artifact['artifact_id'],
+            'data_type': target_data_type,
+            'column_business_name': self._generate_business_name(column_name),
+            'column_comment': f"Cascaded from {source_col.get('column_name', '')}",
+            'order': next_order,
+            'source_column': source_col.get('column_name', ''),
+            'cascaded': True
         }
     
     def _create_dimension_keys(self, upstream_artifact: pd.Series, target_artifact: pd.Series, 
@@ -1049,28 +1127,28 @@ class ColumnCascadingEngine:
         
         # Create SK field
         sk_col = {
-            'Column ID': self._get_next_column_id(),
-            'Column Name': f'dim_{upstream_name}_SK',
-            'Artifact ID': target_artifact['Artifact ID'],
-            'Data Type': 'BIGINT',
-            'Column Business Name': f'dim_{upstream_name}_surrogate_key',
-            'Column Comment': f'Surrogate key for {upstream_name} dimension',
-            'Order': 1,
-            'Source Column': f'{upstream_name}_SK',
-            'Cascaded': True
+            'column_id': self._get_next_column_id(),
+            'column_name': f'dim_{upstream_name}_SK',
+            'artifact_id': target_artifact['artifact_id'],
+            'data_type': 'BIGINT',
+            'column_business_name': f'dim_{upstream_name}_surrogate_key',
+            'column_comment': f'Surrogate key for {upstream_name} dimension',
+            'order': 1,
+            'source_column': f'{upstream_name}_SK',
+            'cascaded': True
         }
         
         # Create BK field
         bk_col = {
-            'Column ID': self._get_next_column_id(),
-            'Column Name': f'dim_{upstream_name}_BK',
-            'Artifact ID': target_artifact['Artifact ID'],
-            'Data Type': 'BIGINT',
-            'Column Business Name': f'dim_{upstream_name}_business_key',
-            'Column Comment': f'Business key for {upstream_name} dimension',
-            'Order': 2,
-            'Source Column': f'{upstream_name}_BK',
-            'Cascaded': True
+            'column_id': self._get_next_column_id(),
+            'column_name': f'dim_{upstream_name}_BK',
+            'artifact_id': target_artifact['artifact_id'],
+            'data_type': 'BIGINT',
+            'column_business_name': f'dim_{upstream_name}_business_key',
+            'column_comment': f'Business key for {upstream_name} dimension',
+            'order': 2,
+            'source_column': f'{upstream_name}_BK',
+            'cascaded': True
         }
         
         return sk_col, bk_col
@@ -1078,19 +1156,19 @@ class ColumnCascadingEngine:
     def _create_cdc_column(self, upstream_artifact: pd.Series, target_artifact: pd.Series, 
                          target_platform: str) -> Dict:
         """Create CDC (Change Data Capture) column."""
-        upstream_stage = upstream_artifact['Stage Name']
+        upstream_stage = upstream_artifact['stage_name']
         cdc_column_name = f'__{upstream_stage}_last_changed_DT'
         
         return {
-            'Column ID': self._get_next_column_id(),
-            'Column Name': cdc_column_name,
-            'Artifact ID': target_artifact['Artifact ID'],
-            'Data Type': 'TIMESTAMP',
-            'Column Business Name': f'{upstream_stage}_last_changed_date',
-            'Column Comment': f'CDC timestamp from {upstream_stage} stage',
-            'Order': self._get_next_column_order(target_artifact['Artifact ID']),
-            'Source Column': cdc_column_name,
-            'Cascaded': True
+            'column_id': self._get_next_column_id(),
+            'column_name': cdc_column_name,
+            'artifact_id': target_artifact['artifact_id'],
+            'data_type': 'TIMESTAMP',
+            'column_business_name': f'{upstream_stage}_last_changed_date',
+            'column_comment': f'CDC timestamp from {upstream_stage} stage',
+            'order': self._get_next_column_order(target_artifact['artifact_id']),
+            'source_column': cdc_column_name,
+            'cascaded': True
         }
     
     def _create_technical_columns(self, stage: str, target_artifact: pd.Series, 
@@ -1105,15 +1183,15 @@ class ColumnCascadingEngine:
             # Only add fields that are marked for inclusion
             if not tech_col_config.get('include_in_tech_fields', False):
                 tech_col = {
-                    'Column ID': self._get_next_column_id(),
-                    'Column Name': tech_col_config['column_name'],
-                    'Artifact ID': target_artifact['Artifact ID'],
-                    'Data Type': tech_col_config['data_type'],
-                    'Column Business Name': tech_col_config['column_name'].lower(),
-                    'Column Comment': f'Technical column for {stage} stage',
-                    'Order': self._get_next_column_order(target_artifact['Artifact ID']),
-                    'Source Column': tech_col_config['column_name'],
-                    'Cascaded': True
+                    'column_id': self._get_next_column_id(),
+                    'column_name': tech_col_config['column_name'],
+                    'artifact_id': target_artifact['artifact_id'],
+                    'data_type': tech_col_config['data_type'],
+                    'column_business_name': tech_col_config['column_name'].lower(),
+                    'column_comment': f'Technical column for {stage} stage',
+                    'order': self._get_next_column_order(target_artifact['artifact_id']),
+                    'source_column': tech_col_config['column_name'],
+                    'cascaded': True
                 }
                 tech_columns.append(tech_col)
         
@@ -1133,15 +1211,15 @@ class ColumnCascadingEngine:
             List[Dict]: Filtered list without duplicates
         """
         # Get existing column names for this artifact
-        existing_artifact_columns = existing_columns_df[existing_columns_df['Artifact ID'] == artifact_id]
-        existing_column_names = set(existing_artifact_columns['Column Name'].tolist())
+        existing_artifact_columns = existing_columns_df[existing_columns_df['artifact_id'] == artifact_id]
+        existing_column_names = set(existing_artifact_columns['column_name'].tolist())
         
         # Track new column names to prevent duplicates within the new columns themselves
         new_column_names = set()
         filtered_columns = []
         
         for new_col in new_columns:
-            col_name = new_col.get('Column Name', '')
+            col_name = new_col.get('column_name', '')
             
             # Skip if column name already exists in artifact or in new columns
             if col_name in existing_column_names or col_name in new_column_names:
@@ -1155,14 +1233,14 @@ class ColumnCascadingEngine:
 
     def _get_stage_platform(self, stage_name: str, stages_df: pd.DataFrame) -> str:
         """Get platform for a stage."""
-        stage_row = stages_df[stages_df['Stage Name'] == stage_name]
+        stage_row = stages_df[stages_df['stage_name'] == stage_name]
         if not stage_row.empty:
-            return stage_row.iloc[0].get('Platform', 'SQL Server')
+            return stage_row.iloc[0].get('platform', 'SQL Server')
         return 'SQL Server'
     
     def _get_stage_info(self, stage_name: str, stages_df: pd.DataFrame) -> Dict:
         """Get stage information."""
-        stage_row = stages_df[stages_df['Stage Name'] == stage_name]
+        stage_row = stages_df[stages_df['stage_name'] == stage_name]
         if not stage_row.empty:
             return stage_row.iloc[0].to_dict()
         return {}
@@ -1174,7 +1252,7 @@ class ColumnCascadingEngine:
     
     def _generate_column_name(self, source_col: pd.Series, naming_side: str) -> str:
         """Generate column name based on naming strategy."""
-        source_name = source_col.get('Column Name', '')
+        source_name = source_col.get('column_name', '')
         
         if naming_side.lower() == 'business':
             # Use business-friendly naming
@@ -1219,10 +1297,10 @@ class ColumnCascadingEngine:
         """Get next order number for columns in an artifact."""
         try:
             columns_df = self.excel_utils.read_sheet_data(self.workbook_path, 'Columns')
-            if not columns_df.empty and 'Artifact ID' in columns_df.columns and 'Order' in columns_df.columns:
-                artifact_columns = columns_df[columns_df['Artifact ID'] == artifact_id]
+            if not columns_df.empty and 'artifact_id' in columns_df.columns and 'order' in columns_df.columns:
+                artifact_columns = columns_df[columns_df['artifact_id'] == artifact_id]
                 if not artifact_columns.empty:
-                    max_order = artifact_columns['Order'].max()
+                    max_order = artifact_columns['order'].max()
                     return max_order + 1 if pd.notna(max_order) else 1
             return 1
         except Exception:
@@ -1240,14 +1318,14 @@ class ColumnCascadingEngine:
         sorted_columns = sorted(columns_list, key=lambda col: (
             self._get_column_type_order_priority(
                 col.get('Column Group', ''), 
-                col.get('Column Name', '')
+                col.get('column_name', '')
             ),
-            col.get('Order', 999)  # Use original order as secondary sort
+            col.get('order', 999)  # Use original order as secondary sort
         ))
         
-        # Update Order field to reflect new hierarchy
+        # Update order field to reflect new hierarchy
         for i, column in enumerate(sorted_columns, 1):
-            column['Order'] = i
+            column['order'] = i
         
         return sorted_columns
     
@@ -1255,7 +1333,7 @@ class ColumnCascadingEngine:
         """
         Get ordering priority for column based on type.
         Lower numbers come first. 
-        Priority: SK (1) -> BK (2) -> Regular attributes (3) -> Technical fields (4)
+        Priority: Primary Key (0) -> SK (1) -> BK (2) -> Regular attributes (3) -> Technical fields (4)
         """
         if not column_group or pd.isna(column_group):
             # Use column name patterns for fallback detection
@@ -1270,10 +1348,12 @@ class ColumnCascadingEngine:
         
         column_group_lower = str(column_group).lower()
         
-        if column_group_lower == 'sks':
-            return 1  # SKs first
+        if column_group_lower in ['primary_key', 'primarykey', 'pk']:
+            return 0  # Primary keys first (highest priority)
+        elif column_group_lower == 'sks':
+            return 1  # SKs second
         elif column_group_lower == 'bks':
-            return 2  # BKs second  
+            return 2  # BKs third  
         elif column_group_lower in ['technical_fields', 'technical fields']:
             return 4  # Technical fields last
         else:
@@ -1307,7 +1387,7 @@ class ColumnCascadingEngine:
                     'default_data': self._create_enhanced_technical_columns()
                 },
                 'StageConfiguration': {
-                    'headers': ['Stage_ID', 'Stage_Name', 'Platform', 'Business_Side', 'Processing_Notes'],
+                    'headers': ['Stage_ID', 'Stage_Name', 'Platform', 'Artifact_Side', 'Processing_Notes'],
                     'default_data': self._create_stage_configuration()
                 },
                 'RelationTypes': {
@@ -1428,13 +1508,13 @@ class ColumnCascadingEngine:
     def _create_stage_configuration(self) -> List[Dict]:
         """Create stage configuration for enhanced processing."""
         stages = [
-            {"Stage_ID": "s0", "Stage_Name": "0_drop_zone", "Platform": "Azure SQL", "Business_Side": "source", "Processing_Notes": "Raw data ingestion, minimal processing"},
-            {"Stage_ID": "s1", "Stage_Name": "1_bronze", "Platform": "Azure SQL", "Business_Side": "source", "Processing_Notes": "Raw storage with basic structure"},
-            {"Stage_ID": "s2", "Stage_Name": "2_silver", "Platform": "Azure SQL", "Business_Side": "business", "Processing_Notes": "Cleaned and validated, SCD implementation"},
-            {"Stage_ID": "s3", "Stage_Name": "3_gold", "Platform": "Azure SQL", "Business_Side": "business", "Processing_Notes": "Business ready, conformed dimensions"},
-            {"Stage_ID": "s4", "Stage_Name": "4_mart", "Platform": "Azure SQL", "Business_Side": "business", "Processing_Notes": "Analytical marts and aggregations"},
-            {"Stage_ID": "s5", "Stage_Name": "5_PBI_Model", "Platform": "Power BI", "Business_Side": "business", "Processing_Notes": "Power BI optimized model"},
-            {"Stage_ID": "s6", "Stage_Name": "6_PBI_Reports", "Platform": "Power BI", "Business_Side": "business", "Processing_Notes": "Report layer definitions"}
+            {"Stage_ID": "s0", "Stage_Name": "0_drop_zone", "Platform": "Azure SQL", "Artifact_Side": "source", "Processing_Notes": "Raw data ingestion, minimal processing"},
+            {"Stage_ID": "s1", "Stage_Name": "1_bronze", "Platform": "Azure SQL", "Artifact_Side": "source", "Processing_Notes": "Raw storage with basic structure"},
+            {"Stage_ID": "s2", "Stage_Name": "2_silver", "Platform": "Azure SQL", "Artifact_Side": "business", "Processing_Notes": "Cleaned and validated, SCD implementation"},
+            {"Stage_ID": "s3", "Stage_Name": "3_gold", "Platform": "Azure SQL", "Artifact_Side": "business", "Processing_Notes": "Business ready, conformed dimensions"},
+            {"Stage_ID": "s4", "Stage_Name": "4_mart", "Platform": "Azure SQL", "Artifact_Side": "business", "Processing_Notes": "Analytical marts and aggregations"},
+            {"Stage_ID": "s5", "Stage_Name": "5_PBI_Model", "Platform": "Power BI", "Artifact_Side": "business", "Processing_Notes": "Power BI optimized model"},
+            {"Stage_ID": "s6", "Stage_Name": "6_PBI_Reports", "Platform": "Power BI", "Artifact_Side": "business", "Processing_Notes": "Report layer definitions"}
         ]
         return stages
 

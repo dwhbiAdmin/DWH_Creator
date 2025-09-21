@@ -168,8 +168,8 @@ class RelationProcessor:
         
         # Extract surrogate keys (SKs) and business keys (BKs)
         for col in source_columns:
-            col_name = col.get('Column Name', '').lower()
-            col_group = col.get('Column Group', '').lower()
+            col_name = col.get('column_name', '').lower()
+            col_group = col.get('column_group', '').lower()
             
             # Include surrogate keys
             if col_group == 'sks' or col_name.endswith('_sk'):
@@ -208,7 +208,7 @@ class RelationProcessor:
                 if len(lookup_columns) >= field_limit:
                     break
                     
-                col_group = col.get('Column Group', '').lower()
+                col_group = col.get('column_group', '').lower()
                 if col_group == group:
                     lookup_columns.append(col.copy())
         
@@ -230,7 +230,7 @@ class RelationProcessor:
         pbi_columns = []
         
         for col in source_columns:
-            col_group = col.get('Column Group', '').lower()
+            col_group = col.get('column_group', '').lower()
             
             # Include keys and facts for Power BI models
             if col_group in ['sks', 'bks', 'facts']:
@@ -246,15 +246,15 @@ class RelationProcessor:
             # Bronze → Silver: Clean naming, standardize types
             for col in columns:
                 # Remove bronze prefixes, standardize naming
-                col_name = col.get('Column Name', '')
+                col_name = col.get('column_name', '')
                 if col_name.startswith('bronze_'):
-                    col['Column Name'] = col_name.replace('bronze_', '')
+                    col['column_name'] = col_name.replace('bronze_', '')
         
         elif transition == StageTransition.SILVER_TO_GOLD:
             # Silver → Gold: Prepare for analytical use
             for col in columns:
                 # Optimize data types for analytics
-                data_type = col.get('Data Type', '')
+                data_type = col.get('data_type', '')
                 if data_type == 'varchar':
                     # Consider converting to more specific types in gold
                     pass
@@ -267,12 +267,12 @@ class RelationProcessor:
         if artifact_type == ArtifactType.FACT:
             # Facts: Ensure measures are properly typed
             for col in columns:
-                col_group = col.get('Column Group', '').lower()
+                col_group = col.get('column_group', '').lower()
                 if col_group == 'facts':
                     # Ensure numeric types for measures
-                    data_type = col.get('Data Type', '')
+                    data_type = col.get('data_type', '')
                     if data_type in ['varchar', 'text']:
-                        col['Data Type'] = 'decimal(18,2)'  # Default measure type
+                        col['data_type'] = 'decimal(18,2)'  # Default measure type
         
         return columns
     
@@ -284,38 +284,38 @@ class RelationProcessor:
         
         # Common technical fields for all stages
         common_fields = [
-            {'Column Name': f'__{stage}_loadDate', 'Data Type': 'datetime2', 'Column Group': 'technical_fields'},
-            {'Column Name': f'__{stage}_source', 'Data Type': 'varchar(100)', 'Column Group': 'technical_fields'},
+            {'column_name': f'__{stage}_loadDate', 'data_type': 'datetime2', 'column_group': 'technical_fields'},
+            {'column_name': f'__{stage}_source', 'data_type': 'varchar(100)', 'column_group': 'technical_fields'},
         ]
         
         # Stage-specific technical fields
         if stage == 's2':  # Silver
             common_fields.extend([
-                {'Column Name': '__silver_validFrom', 'Data Type': 'datetime2', 'Column Group': 'technical_fields'},
-                {'Column Name': '__silver_validTo', 'Data Type': 'datetime2', 'Column Group': 'technical_fields'},
+                {'column_name': '__silver_validFrom', 'data_type': 'datetime2', 'column_group': 'technical_fields'},
+                {'column_name': '__silver_validTo', 'data_type': 'datetime2', 'column_group': 'technical_fields'},
             ])
         
         elif stage == 's3':  # Gold
             common_fields.extend([
-                {'Column Name': '__gold_lastRefresh', 'Data Type': 'datetime2', 'Column Group': 'technical_fields'},
-                {'Column Name': '__gold_aggregationLevel', 'Data Type': 'varchar(50)', 'Column Group': 'technical_fields'},
+                {'column_name': '__gold_lastRefresh', 'data_type': 'datetime2', 'column_group': 'technical_fields'},
+                {'column_name': '__gold_aggregationLevel', 'data_type': 'varchar(50)', 'column_group': 'technical_fields'},
             ])
         
         # Artifact-type specific technical fields
         if artifact_type == ArtifactType.DIMENSION:
             common_fields.extend([
-                {'Column Name': '__dim_scdType', 'Data Type': 'int', 'Column Group': 'technical_fields'},
-                {'Column Name': '__dim_isCurrent', 'Data Type': 'bit', 'Column Group': 'technical_fields'},
+                {'column_name': '__dim_scdType', 'data_type': 'int', 'column_group': 'technical_fields'},
+                {'column_name': '__dim_isCurrent', 'data_type': 'bit', 'column_group': 'technical_fields'},
             ])
         
         elif artifact_type == ArtifactType.FACT:
             common_fields.extend([
-                {'Column Name': '__fact_grainLevel', 'Data Type': 'varchar(100)', 'Column Group': 'technical_fields'},
-                {'Column Name': '__fact_measureUnit', 'Data Type': 'varchar(50)', 'Column Group': 'technical_fields'},
+                {'column_name': '__fact_grainLevel', 'data_type': 'varchar(100)', 'column_group': 'technical_fields'},
+                {'column_name': '__fact_measureUnit', 'data_type': 'varchar(50)', 'column_group': 'technical_fields'},
             ])
         
         # Add order numbers to technical fields
         for i, field in enumerate(common_fields):
-            field['Order'] = base_order + i
+            field['order'] = base_order + i
         
         return common_fields

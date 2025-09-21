@@ -254,15 +254,15 @@ class WorkbenchManager:
     def _find_artifact_id(self, csv_filename: str, artifacts_df: pd.DataFrame) -> str:
         """Find artifact ID for a CSV filename."""
         # Look for exact match in Artifact Name column
-        matches = artifacts_df[artifacts_df['Artifact Name'] == csv_filename]
+        matches = artifacts_df[artifacts_df['artifact_name'] == csv_filename]
         if not matches.empty:
-            return matches.iloc[0]['Artifact ID']
+            return matches.iloc[0]['artifact_id']
         
         # Try without extension
         filename_without_ext = os.path.splitext(csv_filename)[0]
-        matches = artifacts_df[artifacts_df['Artifact Name'] == filename_without_ext]
+        matches = artifacts_df[artifacts_df['artifact_name'] == filename_without_ext]
         if not matches.empty:
-            return matches.iloc[0]['Artifact ID']
+            return matches.iloc[0]['artifact_id']
         
         return None
 
@@ -275,19 +275,19 @@ class WorkbenchManager:
             
             # Remove existing columns for this artifact
             if not columns_df.empty:
-                columns_df = columns_df[columns_df['Artifact ID'] != artifact_id]
+                columns_df = columns_df[columns_df['artifact_id'] != artifact_id]
             
             # Create new rows for this artifact
             new_rows = []
             for col_info in columns_info:
                 new_row = {
-                    'Artifact ID': artifact_id,
-                    'Column ID': f"c{col_info['order']}",
-                    'Column Name': col_info['column_name'],
-                    'Order': col_info['order'],
-                    'Data Type': col_info['data_type'],
-                    'Column Comment': '',  # Will be filled by AI
-                    'Readable Column Name': '',  # Will be filled by AI
+                    'artifact_id': artifact_id,
+                    'column_id': f"c{col_info['order']}",
+                    'column_name': col_info['column_name'],
+                    'order': col_info['order'],
+                    'data_type': col_info['data_type'],
+                    'column_comment': '',  # Will be filled by AI
+                    'column_business_name': '',  # Will be filled by AI
                     'Column Group': '',    # Will be filled by cascade
                     'Simple Calculation': ''
                 }
@@ -455,13 +455,13 @@ class WorkbenchManager:
         try:
             # Load artifacts data
             artifacts_df = self.excel_utils.read_sheet_data(self.workbook_path, "Artifacts")
-            target_artifact = artifacts_df[artifacts_df['Artifact ID'] == artifact_id]
+            target_artifact = artifacts_df[artifacts_df['artifact_id'] == artifact_id]
             
             if target_artifact.empty:
                 return {"error": f"Artifact {artifact_id} not found"}
             
             target_artifact = target_artifact.iloc[0]
-            upstream_relation = target_artifact.get('Upstream Relation', '')
+            upstream_relation = target_artifact.get('upstream_relation', '')
             
             if not upstream_relation:
                 return {"message": "No upstream relationship defined", "columns": []}
@@ -469,9 +469,9 @@ class WorkbenchManager:
             # Get preview (this would be a new method in the cascading engine)
             preview = {
                 "artifact_id": artifact_id,
-                "artifact_name": target_artifact.get('Artifact Name', ''),
+                "artifact_name": target_artifact.get('artifact_name', ''),
                 "upstream_relation": upstream_relation,
-                "stage": target_artifact.get('Stage Name', ''),
+                "stage": target_artifact.get('stage_name', ''),
                 "preview_note": f"Would cascade columns based on '{upstream_relation}' relationship"
             }
             
@@ -494,11 +494,11 @@ class WorkbenchManager:
             
             # Filter artifacts with upstream relationships
             artifacts_with_upstream = artifacts_df[
-                artifacts_df['Upstream Relation'].notna() & 
-                (artifacts_df['Upstream Relation'] != '')
+                artifacts_df['upstream_relation'].notna() & 
+                (artifacts_df['upstream_relation'] != '')
             ]
             
-            return artifacts_with_upstream[['Artifact ID', 'Artifact Name', 'Stage Name', 'Upstream Relation']].to_dict('records')
+            return artifacts_with_upstream[['artifact_id', 'artifact_name', 'stage_name', 'upstream_relation']].to_dict('records')
             
         except Exception as e:
             self.logger.error(f"Error getting artifacts with upstream relationships: {str(e)}")

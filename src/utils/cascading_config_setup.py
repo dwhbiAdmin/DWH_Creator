@@ -124,9 +124,9 @@ class CascadingConfigManager:
         ]
         
         return pd.DataFrame(mappings, columns=[
-            "SQL Server Data Type",
-            "Databricks SQL Data Type", 
-            "Power BI Data Type"
+            "sql_server",
+            "databricks", 
+            "power_bi"
         ])
     
     def _create_technical_columns(self, project_name: str = "DefaultProject") -> pd.DataFrame:
