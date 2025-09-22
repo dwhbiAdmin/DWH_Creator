@@ -22,7 +22,7 @@ DWH_Creator/
 │   ├── utils/             # Common utilities and helpers
 │   │   ├── config_manager.py      # Configuration management
 │   │   ├── logger.py              # Logging utilities
-│   │   ├── file_utils.py          # File operations
+│   │   ├── A_file_utils.py        # File operations
 │   │   ├── excel_utils.py         # Excel-specific utilities
 │   │   ├── column_cascading.py    # Enhanced column cascading engine
 │   │   └── relation_processor.py  # Deterministic relation processing logic
@@ -157,6 +157,22 @@ The file is automatically ignored by `.gitignore` to protect your API keys.
 - Template engine implementation
 - DDL/ETL artifact generation
 - Git integration features
+
+## 📚 Documentation
+
+Comprehensive documentation is available in the `/documentation` directory:
+
+- **[📖 Documentation Index](documentation/index.md)** - Start here for complete documentation overview
+- **[🚀 Quick Start](documentation/QUICK_START.md)** - Get up and running quickly
+- **[📋 Release Notes](documentation/RELEASE_NOTES_SEPTEMBER_2025.md)** - Latest features and improvements
+
+### Documentation Structure:
+- **`user-guides/`** - Step-by-step user documentation
+- **`technical/`** - Architecture and implementation details  
+- **`reference/`** - Command references and patterns
+- **`implementation/`** - Implementation summaries and status
+- **`guidelines/`** - Development standards and guidelines
+- **`specifications/`** - Original requirements and specifications
 
 ## Architecture
 

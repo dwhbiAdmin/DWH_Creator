@@ -10,22 +10,27 @@ Welcome to the comprehensive documentation for **DWH Creator**. This documentati
 
 | I want to... | Go to... |
 |--------------|----------|
-| **Get started quickly** | [Getting Started Guide](user-guides/getting-started.md) |
+| **Get started quickly** | [Quick Start Guide](QUICK_START.md) |
 | **Use AI features** | [Business Column Names](user-guides/business-column-names.md) |
 | **Understand the architecture** | [System Architecture](technical/architecture.md) |
-| **Integrate AI functionality** | [AI Integration](technical/ai-integration.md) |
-| **View original requirements** | [Specifications](#specifications) |
+| **View reference commands** | [Commands Reference](reference/COMMANDS.md) |
+| **See implementation details** | [Implementation Summary](implementation/IMPLEMENTATION_SUMMARY.md) |
+| **Follow guidelines** | [Anchor Guidelines](guidelines/ANCHOR_GUIDELINES.md) |
 
 ---
 
 ## 📖 User Documentation
 
 ### 🚀 Getting Started
+- **[Quick Start Guide](QUICK_START.md)** - Fast track to using DWH Creator
 - **[Getting Started Guide](user-guides/getting-started.md)** - Complete beginner's guide
   - Installation and setup
   - Your first project walkthrough
   - Basic workflows and AI features
   - Troubleshooting common issues
+
+### 📋 Release Information
+- **[Release Notes](RELEASE_NOTES_SEPTEMBER_2025.md)** - Latest features and improvements
 
 ### 🔧 Feature Guides
 - **[Business Column Names](user-guides/business-column-names.md)** - AI-powered business naming
@@ -68,7 +73,44 @@ Welcome to the comprehensive documentation for **DWH Creator**. This documentati
 
 ---
 
-## 📋 Specifications
+## � Reference Documentation
+
+### 🔍 Command Reference
+- **[Commands Reference](reference/COMMANDS.md)** - Complete command documentation
+  - Development commands and scripts
+  - Testing and validation commands
+  - Code examples and usage patterns
+
+### 🎯 Pattern Reference  
+- **[Patterns Reference](reference/PATTERNS.md)** - Development patterns and best practices
+  - Code patterns and conventions
+  - Implementation guidelines
+  - Architectural patterns
+
+---
+
+## 🛠️ Implementation Documentation
+
+### 📋 Implementation Details
+- **[Implementation Summary](implementation/IMPLEMENTATION_SUMMARY.md)** - Project implementation overview
+  - Feature implementation status
+  - Technical achievements
+  - Architecture decisions
+  - Development milestones
+
+---
+
+## 📏 Guidelines & Standards
+
+### 🎯 Development Guidelines
+- **[Anchor Guidelines](guidelines/ANCHOR_GUIDELINES.md)** - Code documentation standards
+  - Anchor placement guidelines
+  - Documentation conventions
+  - Code reference standards
+
+---
+
+## �📋 Specifications
 
 ### Original Requirements
 - **[Data Warehouse Initial Prompt.docx](specifications/Data Warehouse initial Prompt.docx)** 

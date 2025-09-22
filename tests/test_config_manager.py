@@ -13,7 +13,7 @@ from unittest.mock import Mock, patch
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from utils.config_manager import ConfigManager
+from utils.B_worksheet_config_manager import ConfigManager
 
 
 class TestConfigManager:

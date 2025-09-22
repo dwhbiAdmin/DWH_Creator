@@ -29,7 +29,7 @@ class TestAIWorkbenchManagerIntegration:
     def mock_successful_ai(self):
         """Mock successful AI responses."""
         with patch.object(AIWorkbenchManager, 'is_ai_available', return_value=True), \
-             patch('utils.ai_comment_generator.AICommentGenerator') as mock_ai:
+             patch('utils.Y_ai_comment_generator.AICommentGenerator') as mock_ai:
             mock_ai.return_value.is_available.return_value = True
             mock_ai.return_value.generate_artifact_comment.return_value = "Generated artifact comment"
             mock_ai.return_value.generate_column_comment.return_value = "Generated column comment"
@@ -224,7 +224,7 @@ class TestAIWorkbenchManagerIntegration:
     def test_partial_ai_generation_success(self, mock_write, mock_read, ai_workbench_manager):
         """Test partial success in AI generation."""
         # Mock AI that sometimes fails
-        with patch('utils.ai_comment_generator.AICommentGenerator') as mock_ai:
+        with patch('utils.Y_ai_comment_generator.AICommentGenerator') as mock_ai:
             mock_ai.return_value.is_available.return_value = True
             # First call succeeds, second call fails
             mock_ai.return_value.generate_artifact_comment.side_effect = ["Success comment", ""]
@@ -269,7 +269,7 @@ class TestAIWorkbenchManagerIntegration:
         non_existent_path = temp_dir / "non_existent.xlsx"
         ai_manager = AIWorkbenchManager(str(non_existent_path), "test_key")
         
-        with patch('utils.ai_comment_generator.AICommentGenerator') as mock_ai:
+        with patch('utils.Y_ai_comment_generator.AICommentGenerator') as mock_ai:
             mock_ai.return_value.is_available.return_value = True
             
             # Should handle gracefully when workbook doesn't exist

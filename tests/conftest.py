@@ -96,7 +96,7 @@ def sample_workbook_path(sample_project_dir):
 @pytest.fixture(scope="function")
 def mock_openai_client():
     """Create a mock OpenAI client for testing AI features."""
-    with patch('utils.ai_comment_generator.OpenAI') as mock_openai_class:
+    with patch('utils.Y_ai_comment_generator.OpenAI') as mock_openai_class:
         # Mock successful response
         mock_response = Mock()
         mock_response.choices = [Mock()]
@@ -119,7 +119,7 @@ def mock_config():
         'LOG_LEVEL': 'INFO'
     }
     with patch.dict(os.environ, mock_env, clear=False):
-        with patch('utils.app_config.AppConfig.get_openai_api_key', return_value=None):
+        with patch('utils.Z_app_configurations.AppConfig.get_openai_api_key', return_value=None):
             yield
 
 @pytest.fixture(scope="function")

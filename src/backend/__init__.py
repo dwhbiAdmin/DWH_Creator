@@ -7,20 +7,21 @@ Each module follows the specification's modular design principles with clear nam
 conventions for logical flow.
 
 Modules:
-- project_manager: Project creation and management (step 1)
-- workbench_manager: Excel workbook operations (stages, artifacts, columns) (step 2)
+- A_project_manager: Project creation and management (step 1)  
+- B_workbench_manager: Excel workbook operations (stages, artifacts, columns) (step 2)
 - template_engine: Template processing and substitution (step 3)
-- artifact_generator: Final artifact creation and file generation (step 4)
+- C_artifact_generator_manager: Final artifact creation and file generation (step 4)
 - list_generator: List generation for template substitution (helper A)
-- git_manager: Git integration and version control (helper B)
+- Z_git_manager: Git integration and version control (helper B)
+- Y_ai_manager: AI-powered workbench assistance (helper C)
 """
 
-from .project_manager import ProjectManager
-from .workbench_manager import WorkbenchManager
+from .A_project_manager import ProjectManager
+from .B_workbench_manager import WorkbenchManager
 from .template_engine import TemplateEngine
-from .artifact_generator import ArtifactGenerator
+from .C_artifact_generator_manager import ArtifactGenerator
 from .list_generator import ListGenerator
-from .git_manager import GitManager
+from .Z_git_manager import GitManager
 
 __all__ = [
     "ProjectManager",

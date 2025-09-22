@@ -17,10 +17,10 @@ current_dir = Path(__file__).parent
 src_dir = current_dir.parent
 sys.path.insert(0, str(src_dir))
 
-from backend.project_manager import ProjectManager
-from backend.workbench_manager import WorkbenchManager
+from backend.A_project_manager import ProjectManager
+from backend.B_workbench_manager import WorkbenchManager
 from utils.logger import Logger
-from utils.app_config import AppConfig
+from utils.Z_app_configurations import AppConfig
 
 # ANCHOR: ConsoleInterface Class Definition
 
@@ -232,46 +232,37 @@ class ConsoleInterface:
         while True:
             print(f"\n🔧 Workbench Operations")
             print("-" * 30)
-            print("1. Open Stages Sheet")
-            print("2. Open Artifacts Sheet") 
-            print("3. Open Columns Sheet")
-            print("4. Import/Assign from 1_sources")
-            print("5. Generate AI Comments (Artifacts)")
-            print("6. Generate AI Comments (Columns)")
-            print("7. Generate Business Column Names")
-            print("8. Cascade Operations")
-            print("9. Sync & Validate")
-            print("10. Save Workbook")
+            print("1. Import Raw files from 1_sources")
+            print("2. Generate AI Comments (Artifacts)")
+            print("3. Generate AI Comments (Columns)")
+            print("4. Generate Business Column Names")
+            print("5. Cascade Operations")
+            print("6. Sync & Validate")
+            print("7. Save Workbook")
             print("0. Back to Main Menu")
             print("-" * 30)
             
             try:
-                choice = int(input("Enter your choice (0-10): "))
+                choice = int(input("Enter your choice (0-7): "))
                 
                 if choice == 0:
                     break
                 elif choice == 1:
-                    self._handle_open_stages()
-                elif choice == 2:
-                    self._handle_open_artifacts()
-                elif choice == 3:
-                    self._handle_open_columns()
-                elif choice == 4:
                     self._handle_import_assign()
-                elif choice == 5:
+                elif choice == 2:
                     self._handle_artifact_ai_comments()
-                elif choice == 6:
+                elif choice == 3:
                     self._handle_column_ai_comments()
-                elif choice == 7:
+                elif choice == 4:
                     self._handle_readable_column_names()
-                elif choice == 8:
+                elif choice == 5:
                     self._handle_cascade_operations()
-                elif choice == 9:
+                elif choice == 6:
                     self._handle_sync_validate()
-                elif choice == 10:
+                elif choice == 7:
                     self._handle_save_workbook()
                 else:
-                    print("❌ Please enter a valid number (0-10)")
+                    print("❌ Please enter a valid number (0-7)")
                     
             except ValueError:
                 print("❌ Please enter a valid number")
@@ -309,10 +300,10 @@ class ConsoleInterface:
         
     def _handle_import_assign(self):
         """Handle import/assign operation."""
-        print("\n📥 Import/Assign from 1_sources")
-        print("-" * 35)
+        print("\n📥 Import Raw files from 1_data_sources")
+        print("-" * 40)
         
-        sources_path = os.path.join(self.current_project_path, "1_sources")
+        sources_path = os.path.join(self.current_project_path, "1_data_sources")
         if not os.path.exists(sources_path):
             print(f"❌ Sources folder not found: {sources_path}")
             input("Press Enter to continue...")
@@ -419,7 +410,7 @@ class ConsoleInterface:
             print("1. Cascade All Artifacts")
             print("2. Cascade Specific Artifact")
             print("3. Preview Cascading")
-            print("4. Create Cascading Configuration")
+            print("4. Create Workbench Configuration")
             print("5. List Artifacts with Upstream Relations")
             print("0. Back to Workbench Menu")
             print("-" * 25)
@@ -560,25 +551,40 @@ class ConsoleInterface:
         input("Press Enter to continue...")
     
     def _create_cascading_config(self):
-        """Create cascading configuration file."""
-        print("\n⚙️  Create Cascading Configuration")
+        """Create workbench configuration file using new WorkbenchConfigurationManager."""
+        print("\n⚙️  Create Workbench Configuration")
         print("-" * 38)
         
         try:
             print("This will create a configuration file with:")
-            print("• Data type mappings between platforms")
-            print("• Technical columns for each stage")
-            print("• Default cascading rules")
+            print("• Complete AdventureWorks example structure")
+            print("• Stages, technical columns, relations, and data mappings")
+            print("• Ready-to-use default configuration")
             
             confirm = input("\nCreate configuration file? (y/N): ").strip().lower()
             
             if confirm == 'y':
                 print("\n⏳ Creating configuration file...")
-                success = self.workbench_manager.create_cascading_config()
                 
-                if success:
-                    print("✅ Cascading configuration created successfully!")
-                    print("📁 Check the workbench folder for 'cascading_config.xlsx'")
+                # Import the new WorkbenchConfigurationManager
+                import sys
+                from pathlib import Path
+                current_dir = Path(__file__).parent
+                src_dir = current_dir.parent
+                sys.path.insert(0, str(src_dir))
+                from utils.A_project_config_setup import WorkbenchConfigurationManager
+                
+                # Get project name from current project
+                project_name = Path(self.project_path).name.replace("Project_", "")
+                workbench_dir = Path(self.project_path) / "2_workbench"
+                
+                # Create configuration file
+                config_manager = WorkbenchConfigurationManager()
+                config_file_path = config_manager.create_project_configuration(str(workbench_dir), project_name)
+                
+                if config_file_path:
+                    print("✅ Workbench configuration created successfully!")
+                    print(f"📁 Created: {Path(config_file_path).name}")
                 else:
                     print("❌ Failed to create configuration file. Check logs for details.")
             else:

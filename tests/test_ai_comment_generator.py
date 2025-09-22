@@ -14,7 +14,7 @@ import os
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from utils.ai_comment_generator import AICommentGenerator
+from utils.Y_ai_comment_generator import AICommentGenerator
 
 
 class TestAICommentGenerator:
@@ -31,13 +31,13 @@ class TestAICommentGenerator:
     @pytest.fixture
     def ai_generator_with_key(self):
         """Create AICommentGenerator with API key."""
-        with patch('utils.app_config.AppConfig.get_openai_api_key', return_value="test_api_key"):
+        with patch('utils.Z_app_configurations.AppConfig.get_openai_api_key', return_value="test_api_key"):
             return AICommentGenerator(api_key="test_api_key")
     
     @pytest.fixture
     def ai_generator_no_key(self, mock_config):
         """Create AICommentGenerator without API key."""
-        with patch('utils.app_config.AppConfig.get_openai_api_key', return_value=None):
+        with patch('utils.Z_app_configurations.AppConfig.get_openai_api_key', return_value=None):
             return AICommentGenerator(api_key=None)
     
     def test_initialization_with_key(self, ai_generator_with_key):
@@ -54,7 +54,7 @@ class TestAICommentGenerator:
     def test_initialization_from_env(self):
         """Test initialization gets API key from environment."""
         ai_gen = AICommentGenerator()
-        # Should get key from environment via app_config
+        # Should get key from environment via Z_app_configurations
         assert hasattr(ai_gen, 'api_key')
     
     def test_is_available_with_client(self, ai_generator_with_key):

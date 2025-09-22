@@ -17,7 +17,7 @@ import shutil
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from utils.excel_utils import ExcelUtils
+from utils.B_excel_utils import ExcelUtils
 
 
 class TestExcelUtils:

@@ -65,27 +65,27 @@ class ColumnCascadingEngine:
         self._global_column_id_counter = None
         
         # Load configuration data
-        self._load_cascading_configs()
+        self._load_workbench_configs()
     
     def _get_default_config_path(self) -> str:
-        """Get default cascading configuration file path."""
+        """Get default workbench configuration file path."""
         workbook_dir = Path(self.workbook_path).parent
         workbook_name = Path(self.workbook_path).stem
         
         # Extract project name from workbook name (e.g., "workbench_ProjectName.xlsx")
         if workbook_name.startswith("workbench_"):
             project_name = workbook_name[10:]  # Remove "workbench_" prefix
-            project_specific_config = workbook_dir / f"cascading_config_{project_name}.xlsx"
+            project_specific_config = workbook_dir / f"workbench_configuration_{project_name}.xlsx"
             
             # Check if project-specific config exists
             if project_specific_config.exists():
                 return str(project_specific_config)
         
         # Fallback to generic config
-        return str(workbook_dir / "cascading_config.xlsx")
+        return str(workbook_dir / "workbench_configuration.xlsx")
     
-    def _load_cascading_configs(self):
-        """Load cascading configuration data."""
+    def _load_workbench_configs(self):
+        """Load workbench configuration data."""
         try:
             # Load data type mappings
             self.data_type_mappings = self._load_data_type_mappings()
@@ -93,10 +93,10 @@ class ColumnCascadingEngine:
             # Load technical columns configuration
             self.technical_columns_config = self._load_technical_columns_config()
             
-            self.logger.info("Cascading configurations loaded successfully")
+            self.logger.info("Workbench configurations loaded successfully")
             
         except Exception as e:
-            self.logger.error(f"Failed to load cascading configurations: {str(e)}")
+            self.logger.error(f"Failed to load workbench configurations: {str(e)}")
             # Initialize with empty configs if loading fails
             self.data_type_mappings = pd.DataFrame()
             self.technical_columns_config = {}
@@ -1627,7 +1627,7 @@ class ColumnCascadingEngine:
         """
         try:
             # Import AI generator here to avoid circular imports
-            from backend.ai_workbench_manager import AIWorkbenchManager
+            from backend.Y_ai_manager import AIWorkbenchManager
             
             # Try to get AI workbench from parent workbench manager
             if hasattr(self, 'workbench_manager') and self.workbench_manager.is_ai_available():

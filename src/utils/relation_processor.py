@@ -18,7 +18,7 @@ current_dir = Path(__file__).parent
 src_dir = current_dir.parent
 sys.path.insert(0, str(src_dir))
 
-from utils.config_manager import ConfigManager
+from utils.B_worksheet_config_manager import ConfigManager
 from utils.logger import Logger
 
 # ANCHOR: Enums and Constants
