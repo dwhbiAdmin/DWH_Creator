@@ -11,6 +11,7 @@ Modules:
 - A_file_utils: File and directory operations
 - B_excel_utils: Excel-specific operations and helpers
 - Y_ai_comment_generator: AI-powered comment generation
+- B_raw_files_enhancement: Comprehensive enhancement of imported raw files
 """
 
 from .B_worksheet_config_manager import ConfigManager
@@ -19,6 +20,7 @@ from .logger import Logger
 from .A_file_utils import FileUtils
 from .B_excel_utils import ExcelUtils
 from .Y_ai_comment_generator import AICommentGenerator
+from .B_raw_files_enhancement import enhance_raw_files, RawFilesEnhancer
 
 __all__ = [
     "ConfigManager",
@@ -26,5 +28,7 @@ __all__ = [
     "Logger", 
     "FileUtils",
     "ExcelUtils",
-    "AICommentGenerator"
+    "AICommentGenerator",
+    "enhance_raw_files",
+    "RawFilesEnhancer"
 ]

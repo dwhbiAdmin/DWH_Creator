@@ -21,6 +21,7 @@ from backend.A_project_manager import ProjectManager
 from backend.B_workbench_manager import WorkbenchManager
 from utils.logger import Logger
 from utils.Z_app_configurations import AppConfig
+from utils.B_raw_files_enhancement import enhance_raw_files
 
 # ANCHOR: ConsoleInterface Class Definition
 
@@ -233,36 +234,30 @@ class ConsoleInterface:
             print(f"\n🔧 Workbench Operations")
             print("-" * 30)
             print("1. Import Raw files from 1_sources")
-            print("2. Generate AI Comments (Artifacts)")
-            print("3. Generate AI Comments (Columns)")
-            print("4. Generate Business Column Names")
-            print("5. Cascade Operations")
-            print("6. Sync & Validate")
-            print("7. Save Workbook")
+            print("2. Enhance Inserted raw files")
+            print("3. Cascade Operations")
+            print("4. Sync & Validate")
+            print("5. Save Workbook")
             print("0. Back to Main Menu")
             print("-" * 30)
             
             try:
-                choice = int(input("Enter your choice (0-7): "))
+                choice = int(input("Enter your choice (0-5): "))
                 
                 if choice == 0:
                     break
                 elif choice == 1:
                     self._handle_import_assign()
                 elif choice == 2:
-                    self._handle_artifact_ai_comments()
+                    self._handle_enhance_raw_files()
                 elif choice == 3:
-                    self._handle_column_ai_comments()
-                elif choice == 4:
-                    self._handle_readable_column_names()
-                elif choice == 5:
                     self._handle_cascade_operations()
-                elif choice == 6:
+                elif choice == 4:
                     self._handle_sync_validate()
-                elif choice == 7:
+                elif choice == 5:
                     self._handle_save_workbook()
                 else:
-                    print("❌ Please enter a valid number (0-7)")
+                    print("❌ Please enter a valid number (0-5)")
                     
             except ValueError:
                 print("❌ Please enter a valid number")
@@ -331,6 +326,55 @@ class ConsoleInterface:
             else:
                 print("❌ Import/Assign failed")
                 print("💡 Tip: If you see file locking errors, close Excel and try again")
+        
+        input("Press Enter to continue...")
+    
+    def _handle_enhance_raw_files(self):
+        """Handle comprehensive enhancement of imported raw files."""
+        print("\n🚀 Enhance Inserted Raw Files")
+        print("-" * 40)
+        print("This will perform the following operations:")
+        print("1. ✅ Generate AI comments for artifacts")
+        print("2. ✅ Generate AI comments for columns") 
+        print("3. ✅ Determine primary keys deterministically")
+        print("4. ✅ Generate AI business names for columns")
+        print()
+        
+        # Check if workbook exists and has data
+        if not self.workbench_manager.workbook_path:
+            print("❌ No workbook found. Please import raw files first.")
+            input("Press Enter to continue...")
+            return
+        
+        print("⚠️  Important: Make sure the Excel workbook is closed before proceeding")
+        proceed = input("🔄 Proceed with comprehensive enhancement? (y/n): ").strip().lower()
+        
+        if proceed in ['y', 'yes']:
+            print("\n⏳ Starting comprehensive enhancement...")
+            print("This may take a few minutes depending on the amount of data and AI response times.")
+            print()
+            
+            try:
+                # Call the enhancement function with the workbook path and API key
+                success = enhance_raw_files(
+                    workbook_path=self.workbench_manager.workbook_path,
+                    api_key=self.openai_api_key
+                )
+                
+                if success:
+                    print("\n🎉 ✅ Enhancement completed successfully!")
+                    print("All operations have been completed:")
+                    print("   ✅ Artifact comments generated")
+                    print("   ✅ Column comments generated")
+                    print("   ✅ Primary keys identified")
+                    print("   ✅ Business names generated")
+                else:
+                    print("\n⚠️ Enhancement completed with some issues.")
+                    print("Please check the logs for details.")
+                    
+            except Exception as e:
+                print(f"\n❌ Error during enhancement: {str(e)}")
+                print("💡 Tip: Check that the workbook is closed and try again")
         
         input("Press Enter to continue...")
     
