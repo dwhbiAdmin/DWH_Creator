@@ -11,7 +11,7 @@ Adapted from previous implementation for DWH Creator specific needs.
 from openai import OpenAI
 import os
 from typing import Dict, List, Optional
-from .Z_app_configurations import AppConfig
+from .z_app_configuration import AppConfig
 
 # ANCHOR: AICommentGenerator Class Definition
 

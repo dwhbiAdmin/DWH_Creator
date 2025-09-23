@@ -28,11 +28,11 @@ current_dir = Path(__file__).parent
 src_dir = current_dir.parent
 sys.path.insert(0, str(src_dir))
 
-from utils.B_excel_utils import ExcelUtils
-from utils.logger import Logger
-from utils.B_worksheet_config_manager import ConfigManager
-from utils.B_workbench_cascading import ColumnCascadingEngine
-from .Y_ai_manager import AIWorkbenchManager
+from utils.c_workbench_excel_utils import ExcelUtils
+from utils.z_logger import Logger
+from utils.c_workbench_config_utils import ConfigManager
+from utils.c_workbench_cascade_utils import ColumnCascadingEngine
+from .z_ai_integration_manager import AIWorkbenchManager
 
 # ANCHOR: WorkbenchManager Class Definition
 

@@ -18,11 +18,11 @@ import re
 from collections import Counter
 
 # Import project utilities
-from utils.logger import Logger
-from utils.B_worksheet_config_manager import ConfigManager
-from utils.B_excel_utils import ExcelUtils
-from backend.Y_ai_manager import AIWorkbenchManager
-from utils.Y_ai_comment_generator import AICommentGenerator
+from utils.z_logger import Logger
+from utils.c_workbench_config_utils import ConfigManager
+from utils.c_workbench_excel_utils import ExcelUtils
+from backend.z_ai_integration_manager import AIWorkbenchManager
+from utils.z_ai_comment_utils import AICommentGenerator
 
 
 class RawFilesEnhancer:

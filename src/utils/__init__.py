@@ -3,24 +3,22 @@ Utilities Package
 ================
 
 Common utilities and helper functions used across the DWH Creator application.
+Organized by functional area with letter prefixes matching backend managers.
 
 Modules:
-- B_worksheet_config_manager: Configuration and settings management
-- Z_app_configurations: Application configuration from config files
-- logger: Logging and debugging utilities
-- A_file_utils: File and directory operations
-- B_excel_utils: Excel-specific operations and helpers
-- Y_ai_comment_generator: AI-powered comment generation
-- B_raw_files_enhancement: Comprehensive enhancement of imported raw files
+- a_project_*: Project-related utilities (Menu 1 & 2)
+- c_workbench_*: Workbench-related utilities (Menu 3)  
+- d_artifact_*: Artifact generation utilities (Menu 4)
+- z_*: Shared utilities used across multiple areas
 """
 
-from .B_worksheet_config_manager import ConfigManager
-from .Z_app_configurations import AppConfig
-from .logger import Logger
-from .A_file_utils import FileUtils
-from .B_excel_utils import ExcelUtils
-from .Y_ai_comment_generator import AICommentGenerator
-from .B_raw_files_enhancement import enhance_raw_files, RawFilesEnhancer
+from .c_workbench_config_utils import ConfigManager
+from .z_app_configuration import AppConfig
+from .z_logger import Logger
+from .a_project_file_utils import FileUtils
+from .c_workbench_excel_utils import ExcelUtils
+from .z_ai_comment_utils import AICommentGenerator
+from .c_workbench_enhance_utils import enhance_raw_files, RawFilesEnhancer
 
 __all__ = [
     "ConfigManager",

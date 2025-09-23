@@ -19,10 +19,10 @@ current_dir = Path(__file__).parent
 src_dir = current_dir.parent
 sys.path.insert(0, str(src_dir))
 
-from utils.B_excel_utils import ExcelUtils
-from utils.logger import Logger
-from utils.B_worksheet_config_manager import ConfigManager
-from utils.relation_processor import RelationProcessor, ArtifactType
+from utils.c_workbench_excel_utils import ExcelUtils
+from utils.z_logger import Logger
+from utils.c_workbench_config_utils import ConfigManager
+from utils.d_artifact_relation_utils import RelationProcessor, ArtifactType
 
 # ANCHOR: Enums and Constants
 class UpstreamRelationType(Enum):
@@ -1627,7 +1627,7 @@ class ColumnCascadingEngine:
         """
         try:
             # Import AI generator here to avoid circular imports
-            from backend.ai_workbench_manager import AIWorkbenchManager
+            from backend.z_ai_integration_manager import AIWorkbenchManager
             
             # Try to get AI workbench from parent workbench manager
             if hasattr(self, 'workbench_manager') and self.workbench_manager.is_ai_available():

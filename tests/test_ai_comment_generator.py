@@ -14,7 +14,7 @@ import os
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from utils.Y_ai_comment_generator import AICommentGenerator
+from utils.z_ai_comment_utils import AICommentGenerator
 
 
 class TestAICommentGenerator:

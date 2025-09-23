@@ -17,11 +17,11 @@ current_dir = Path(__file__).parent
 src_dir = current_dir.parent
 sys.path.insert(0, str(src_dir))
 
-from backend.A_project_manager import ProjectManager
-from backend.B_workbench_manager import WorkbenchManager
-from utils.logger import Logger
-from utils.Z_app_configurations import AppConfig
-from utils.B_raw_files_enhancement import enhance_raw_files
+from backend.a_project_manager import ProjectManager
+from backend.c_workbench_manager import WorkbenchManager
+from utils.z_logger import Logger
+from utils.z_app_configuration import AppConfig
+from utils.c_workbench_enhance_utils import enhance_raw_files
 
 # ANCHOR: ConsoleInterface Class Definition
 
@@ -616,7 +616,7 @@ class ConsoleInterface:
                 current_dir = Path(__file__).parent
                 src_dir = current_dir.parent
                 sys.path.insert(0, str(src_dir))
-                from utils.A_project_config_setup import WorkbenchConfigurationManager
+                from utils.a_project_config_utils import WorkbenchConfigurationManager
                 
                 # Get project name from current project
                 project_name = Path(self.project_path).name.replace("Project_", "")

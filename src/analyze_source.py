@@ -22,8 +22,8 @@ current_dir = Path(__file__).parent
 src_dir = current_dir.parent
 sys.path.insert(0, str(src_dir))
 
-from utils.B_raw_files_integrator import SourceFileIntegrator
-from utils.logger import Logger
+from utils.c_workbench_import_utils import SourceFileIntegrator
+from utils.z_logger import Logger
 
 def main():
     """Main CLI function."""

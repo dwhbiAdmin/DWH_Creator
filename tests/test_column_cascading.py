@@ -23,9 +23,9 @@ current_dir = Path(__file__).parent
 src_dir = current_dir.parent / "src"
 sys.path.insert(0, str(src_dir))
 
-from utils.column_cascading import ColumnCascadingEngine, UpstreamRelationType
-from utils.cascading_config_setup import CascadingConfigManager
-from backend.workbench_manager import WorkbenchManager
+from utils.c_workbench_cascade_utils import ColumnCascadingEngine, UpstreamRelationType
+from utils.c_workbench_config_utils import ConfigManager
+from backend.c_workbench_manager import WorkbenchManager
 
 class TestColumnCascadingEngine:
     """Test the column cascading engine functionality."""
@@ -77,7 +77,7 @@ class TestColumnCascadingEngine:
         with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as temp_file:
             temp_path = temp_file.name
             
-            config_manager = CascadingConfigManager()
+            config_manager = ConfigManager()
             config_manager.create_default_config_file(temp_path)
             
             yield temp_path
@@ -309,13 +309,13 @@ class TestColumnCascadingEngine:
                 os.unlink(temp_config_path)
 
 
-class TestCascadingConfigManager:
+class TestConfigManager:
     """Test the cascading configuration manager."""
     
     @pytest.fixture
     def config_manager(self):
         """Create a config manager instance."""
-        return CascadingConfigManager()
+        return ConfigManager()
     
     def test_data_type_mappings_creation(self, config_manager):
         """Test creation of data type mappings."""

@@ -18,9 +18,9 @@ current_dir = Path(__file__).parent
 src_dir = current_dir.parent
 sys.path.insert(0, str(src_dir))
 
-from utils.Y_ai_comment_generator import AICommentGenerator
-from utils.B_excel_utils import ExcelUtils
-from utils.logger import Logger
+from utils.z_ai_comment_utils import AICommentGenerator
+from utils.c_workbench_excel_utils import ExcelUtils
+from utils.z_logger import Logger
 
 # ANCHOR: AIWorkbenchManager Class Definition
 class AIWorkbenchManager:

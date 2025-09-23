@@ -24,10 +24,10 @@ current_dir = Path(__file__).parent
 src_dir = current_dir.parent
 sys.path.insert(0, str(src_dir))
 
-from utils.A_file_utils import FileUtils
-from utils.logger import Logger
-from utils.A_project_config_setup import WorkbenchConfigurationManager
-from utils.A_workbench_setup import WorkbenchSetupManager
+from utils.a_project_file_utils import FileUtils
+from utils.z_logger import Logger
+from utils.a_project_config_utils import WorkbenchConfigurationManager
+from utils.a_project_setup_utils import WorkbenchSetupManager
 
 # ANCHOR: ProjectManager Class Definition
 

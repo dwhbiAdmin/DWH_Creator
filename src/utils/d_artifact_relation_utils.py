@@ -18,8 +18,8 @@ current_dir = Path(__file__).parent
 src_dir = current_dir.parent
 sys.path.insert(0, str(src_dir))
 
-from utils.B_worksheet_config_manager import ConfigManager
-from utils.logger import Logger
+from utils.c_workbench_config_utils import ConfigManager
+from utils.z_logger import Logger
 
 # ANCHOR: Enums and Constants
 class ArtifactType(Enum):
