@@ -14,7 +14,7 @@ import pandas as pd
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from backend.ai_workbench_manager import AIWorkbenchManager
+from backend.Y_ai_manager import AIWorkbenchManager
 
 
 class TestAIWorkbenchManagerIntegration:
@@ -60,8 +60,8 @@ class TestAIWorkbenchManagerIntegration:
         assert ai_workbench_manager.is_ai_available() is False
     
     @pytest.mark.integration
-    @patch('utils.excel_utils.ExcelUtils.read_sheet_data')
-    @patch('utils.excel_utils.ExcelUtils.write_sheet_data')
+    @patch('utils.B_excel_utils.ExcelUtils.read_sheet_data')
+    @patch('utils.B_excel_utils.ExcelUtils.write_sheet_data')
     def test_generate_artifact_comments_success(self, mock_write, mock_read, ai_workbench_manager, mock_successful_ai):
         """Test successful artifact comment generation."""
         # Setup mock data
@@ -80,7 +80,7 @@ class TestAIWorkbenchManagerIntegration:
         mock_write.assert_called_once()
     
     @pytest.mark.integration
-    @patch('utils.excel_utils.ExcelUtils.read_sheet_data')
+    @patch('utils.B_excel_utils.ExcelUtils.read_sheet_data')
     def test_generate_artifact_comments_no_data(self, mock_read, ai_workbench_manager, mock_successful_ai):
         """Test artifact comment generation with no data."""
         mock_read.return_value = pd.DataFrame()  # Empty DataFrame
@@ -91,7 +91,7 @@ class TestAIWorkbenchManagerIntegration:
         mock_read.assert_called_once()
     
     @pytest.mark.integration
-    @patch('utils.excel_utils.ExcelUtils.read_sheet_data')
+    @patch('utils.B_excel_utils.ExcelUtils.read_sheet_data')
     def test_generate_artifact_comments_already_have_comments(self, mock_read, ai_workbench_manager, mock_successful_ai):
         """Test artifact comment generation when comments already exist."""
         # Setup mock data with existing comments
@@ -108,8 +108,8 @@ class TestAIWorkbenchManagerIntegration:
         mock_read.assert_called_once()
     
     @pytest.mark.integration
-    @patch('utils.excel_utils.ExcelUtils.read_sheet_data')
-    @patch('utils.excel_utils.ExcelUtils.write_sheet_data')
+    @patch('utils.B_excel_utils.ExcelUtils.read_sheet_data')
+    @patch('utils.B_excel_utils.ExcelUtils.write_sheet_data')
     def test_generate_column_comments_success(self, mock_write, mock_read, ai_workbench_manager, mock_successful_ai):
         """Test successful column comment generation."""
         # Setup mock data
@@ -129,8 +129,8 @@ class TestAIWorkbenchManagerIntegration:
         mock_write.assert_called_once()
     
     @pytest.mark.integration
-    @patch('utils.excel_utils.ExcelUtils.read_sheet_data')
-    @patch('utils.excel_utils.ExcelUtils.write_sheet_data')
+    @patch('utils.B_excel_utils.ExcelUtils.read_sheet_data')
+    @patch('utils.B_excel_utils.ExcelUtils.write_sheet_data')
     def test_generate_readable_column_names_success(self, mock_write, mock_read, ai_workbench_manager, mock_successful_ai):
         """Test successful readable column name generation."""
         # Setup mock data
@@ -155,8 +155,8 @@ class TestAIWorkbenchManagerIntegration:
         assert result is False
     
     @pytest.mark.integration
-    @patch('utils.excel_utils.ExcelUtils.read_sheet_data')
-    @patch('utils.excel_utils.ExcelUtils.write_sheet_data')
+    @patch('utils.B_excel_utils.ExcelUtils.read_sheet_data')
+    @patch('utils.B_excel_utils.ExcelUtils.write_sheet_data')
     def test_generate_all_ai_comments_success(self, mock_write, mock_read, ai_workbench_manager, mock_successful_ai):
         """Test successful generation of all AI comments."""
         # Setup mock data for both artifacts and columns
@@ -191,7 +191,7 @@ class TestAIWorkbenchManagerIntegration:
         assert mock_write.call_count == 2  # Written back for both sheets
     
     @pytest.mark.integration
-    @patch('utils.excel_utils.ExcelUtils.read_sheet_data')
+    @patch('utils.B_excel_utils.ExcelUtils.read_sheet_data')
     def test_error_handling_read_failure(self, mock_read, ai_workbench_manager, mock_successful_ai):
         """Test error handling when Excel read fails."""
         mock_read.side_effect = Exception("Excel read error")
@@ -201,8 +201,8 @@ class TestAIWorkbenchManagerIntegration:
         assert result is False
     
     @pytest.mark.integration
-    @patch('utils.excel_utils.ExcelUtils.read_sheet_data')
-    @patch('utils.excel_utils.ExcelUtils.write_sheet_data')
+    @patch('utils.B_excel_utils.ExcelUtils.read_sheet_data')
+    @patch('utils.B_excel_utils.ExcelUtils.write_sheet_data')
     def test_error_handling_write_failure(self, mock_write, mock_read, ai_workbench_manager, mock_successful_ai):
         """Test error handling when Excel write fails."""
         # Setup successful read but failed write
@@ -219,8 +219,8 @@ class TestAIWorkbenchManagerIntegration:
         assert result is False
     
     @pytest.mark.integration
-    @patch('utils.excel_utils.ExcelUtils.read_sheet_data')
-    @patch('utils.excel_utils.ExcelUtils.write_sheet_data')
+    @patch('utils.B_excel_utils.ExcelUtils.read_sheet_data')
+    @patch('utils.B_excel_utils.ExcelUtils.write_sheet_data')
     def test_partial_ai_generation_success(self, mock_write, mock_read, ai_workbench_manager):
         """Test partial success in AI generation."""
         # Mock AI that sometimes fails
@@ -243,7 +243,7 @@ class TestAIWorkbenchManagerIntegration:
             assert result is True
     
     @pytest.mark.integration
-    @patch('utils.excel_utils.ExcelUtils.read_sheet_data')
+    @patch('utils.B_excel_utils.ExcelUtils.read_sheet_data')
     def test_mixed_existing_and_new_comments(self, mock_read, ai_workbench_manager, mock_successful_ai):
         """Test handling of mixed existing and new comments."""
         mock_artifacts_df = pd.DataFrame({
@@ -253,7 +253,7 @@ class TestAIWorkbenchManagerIntegration:
         })
         mock_read.return_value = mock_artifacts_df
         
-        with patch('utils.excel_utils.ExcelUtils.write_sheet_data') as mock_write:
+        with patch('utils.B_excel_utils.ExcelUtils.write_sheet_data') as mock_write:
             mock_write.return_value = True
             
             result = ai_workbench_manager.generate_artifact_comments()

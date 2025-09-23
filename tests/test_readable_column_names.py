@@ -17,8 +17,8 @@ import pandas as pd
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from backend.ai_workbench_manager import AIWorkbenchManager
-from backend.workbench_manager import WorkbenchManager
+from backend.Y_ai_manager import AIWorkbenchManager
+from backend.B_workbench_manager import WorkbenchManager
 
 
 class TestReadableColumnNames(unittest.TestCase):
@@ -40,8 +40,8 @@ class TestReadableColumnNames(unittest.TestCase):
         self.assertIsNotNone(self.ai_workbench.ai_generator)
         self.assertIsNotNone(self.ai_workbench.logger)
         
-    @patch('utils.excel_utils.pd.read_excel')
-    @patch('utils.excel_utils.openpyxl.load_workbook')
+    @patch('utils.B_excel_utils.pd.read_excel')
+    @patch('utils.B_excel_utils.openpyxl.load_workbook')
     def test_generate_readable_column_names_success(self, mock_load_workbook, mock_read_excel):
         """Test successful generation of readable column names."""
         # Mock Excel data
@@ -74,7 +74,7 @@ class TestReadableColumnNames(unittest.TestCase):
             self.assertTrue(result)
             self.assertEqual(mock_ai.generate_readable_column_name.call_count, 4)
             
-    @patch('utils.excel_utils.pd.read_excel')
+    @patch('utils.B_excel_utils.pd.read_excel')
     def test_generate_readable_column_names_no_columns(self, mock_read_excel):
         """Test handling when no columns exist."""
         # Mock empty data
@@ -86,7 +86,7 @@ class TestReadableColumnNames(unittest.TestCase):
         # Should still succeed but do nothing
         self.assertTrue(result)
         
-    @patch('utils.excel_utils.pd.read_excel')
+    @patch('utils.B_excel_utils.pd.read_excel')
     def test_generate_readable_column_names_file_error(self, mock_read_excel):
         """Test handling of file read errors."""
         mock_read_excel.side_effect = FileNotFoundError("Workbook not found")
@@ -95,8 +95,8 @@ class TestReadableColumnNames(unittest.TestCase):
         
         self.assertFalse(result)
         
-    @patch('utils.excel_utils.pd.read_excel')
-    @patch('utils.excel_utils.openpyxl.load_workbook')
+    @patch('utils.B_excel_utils.pd.read_excel')
+    @patch('utils.B_excel_utils.openpyxl.load_workbook')
     def test_generate_readable_column_names_ai_error(self, mock_load_workbook, mock_read_excel):
         """Test handling of AI generation errors."""
         # Mock Excel data
@@ -125,7 +125,7 @@ class TestReadableColumnNames(unittest.TestCase):
     def test_workbench_manager_integration(self):
         """Test integration with workbench manager."""
         # Create workbench manager with mock AI
-        with patch('backend.workbench_manager.AIWorkbenchManager') as mock_ai_class:
+        with patch('backend.B_workbench_manager.AIWorkbenchManager') as mock_ai_class:
             mock_ai_instance = Mock()
             mock_ai_instance.generate_readable_column_names.return_value = True
             mock_ai_class.return_value = mock_ai_instance
