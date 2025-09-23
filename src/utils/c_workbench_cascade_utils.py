@@ -68,26 +68,49 @@ class ColumnCascadingEngine:
         self._load_workbench_configs()
     
     def _get_default_config_path(self) -> str:
-        """Get default workbench configuration file path."""
-        workbook_dir = Path(self.workbook_path).parent
-        workbook_name = Path(self.workbook_path).stem
-        
-        # Extract project name from workbook name (e.g., "workbench_ProjectName.xlsx")
-        if workbook_name.startswith("workbench_"):
-            project_name = workbook_name[10:]  # Remove "workbench_" prefix
-            project_specific_config = workbook_dir / f"workbench_configuration_{project_name}.xlsx"
-            
-            # Check if project-specific config exists
-            if project_specific_config.exists():
-                return str(project_specific_config)
-        
-        # Fallback to generic config
-        return str(workbook_dir / "workbench_configuration.xlsx")
+        """Get the main workbook path for integrated 7-sheet configuration."""
+        # With the 7-sheet integrated approach, configuration is in the main workbook
+        return self.workbook_path
     
     def _load_workbench_configs(self):
-        """Load workbench configuration data."""
+        """Load workbench configuration data from integrated 7-sheet workbook."""
         try:
-            # Load data type mappings
+            # With 7-sheet integration, try to load from config sheets first
+            config_path = self.workbook_path
+            
+            # Load data type mappings from conf_4_data_mappings sheet
+            try:
+                self.data_type_mappings = pd.read_excel(config_path, sheet_name='conf_4_data_mappings')
+                self.logger.info("Loaded data type mappings from integrated config sheet conf_4_data_mappings")
+            except Exception:
+                self.logger.info("conf_4_data_mappings sheet not found, using defaults")
+                self.data_type_mappings = self._get_default_data_mappings()
+            
+            # Load technical columns from conf_2_technical_columns sheet  
+            try:
+                self.technical_columns = pd.read_excel(config_path, sheet_name='conf_2_technical_columns')
+                self.logger.info("Loaded technical columns from integrated config sheet conf_2_technical_columns")
+            except Exception:
+                self.logger.info("conf_2_technical_columns sheet not found, using defaults")
+                self.technical_columns = self._get_default_technical_columns()
+            
+            # Load relations from conf_3_relations sheet
+            try:
+                self.relations_config = pd.read_excel(config_path, sheet_name='conf_3_relations')
+                self.logger.info("Loaded relations config from integrated config sheet conf_3_relations")
+            except Exception:
+                self.logger.info("conf_3_relations sheet not found, using defaults") 
+                self.relations_config = self._get_default_relations()
+            
+            # Load stages from conf_1_stages sheet
+            try:
+                self.stages_config = pd.read_excel(config_path, sheet_name='conf_1_stages')
+                self.logger.info("Loaded stages config from integrated config sheet conf_1_stages")
+            except Exception:
+                self.logger.info("conf_1_stages sheet not found, using defaults")
+                self.stages_config = self._get_default_stages()
+                
+            self.logger.info("Workbench configurations loaded successfully from integrated 7-sheet workbook")
             self.data_type_mappings = self._load_data_type_mappings()
             
             # Load technical columns configuration
@@ -306,21 +329,28 @@ class ColumnCascadingEngine:
         ])
     
     def _load_technical_columns_config(self) -> Dict:
-        """Load technical columns configuration from cascading config file."""
+        """Load technical columns configuration from integrated 7-sheet workbook."""
         try:
-            # Check if TechnicalColumns sheet exists before trying to read it
-            available_sheets = self.excel_utils.get_sheet_names(self.config_path)
-            if "TechnicalColumns" not in available_sheets:
-                self.logger.info("TechnicalColumns sheet not found, using defaults")
-                return self._create_default_technical_columns()
-                
-            df = self.excel_utils.read_sheet_data(self.config_path, "TechnicalColumns")
+            # With 7-sheet integration, technical columns are in conf_2_technical_columns
+            # This data was already loaded in _load_workbench_configs, so use it
+            if hasattr(self, 'technical_columns') and not self.technical_columns.empty:
+                df = self.technical_columns
+                self.logger.info("Using technical columns from integrated config sheet conf_2_technical_columns")
+            else:
+                # Fallback: try to read directly from the workbook
+                try:
+                    df = pd.read_excel(self.workbook_path, sheet_name='conf_2_technical_columns')
+                    self.logger.info("Loaded technical columns directly from conf_2_technical_columns sheet")
+                except Exception:
+                    self.logger.info("conf_2_technical_columns sheet not found, using defaults")
+                    return self._create_default_technical_columns()
+            
             if df.empty:
-                self.logger.warning("TechnicalColumns sheet is empty, using defaults")
+                self.logger.warning("Technical columns configuration is empty, using defaults")
                 return self._create_default_technical_columns()
             
-            self.logger.info(f"Loading technical columns config from {self.config_path}")
-            self.logger.info(f"TechnicalColumns sheet columns: {list(df.columns)}")
+            self.logger.info(f"Processing technical columns config from integrated workbook")
+            self.logger.info(f"Technical columns sheet columns: {list(df.columns)}")
             
             # Convert DataFrame to nested dictionary structure
             config = {}

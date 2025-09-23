@@ -18,7 +18,7 @@ from .z_logger import Logger
 from .a_project_file_utils import FileUtils
 from .c_workbench_excel_utils import ExcelUtils
 from .z_ai_comment_utils import AICommentGenerator
-from .c_workbench_enhance_utils import enhance_raw_files, RawFilesEnhancer
+from .c_workbench_2_enhance_import_utils import enhance_raw_files, RawFilesEnhancer
 
 __all__ = [
     "ConfigManager",

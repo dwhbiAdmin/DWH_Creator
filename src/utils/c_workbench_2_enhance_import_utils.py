@@ -169,6 +169,10 @@ class RawFilesEnhancer:
             
             updated_sheets = 0
             
+            # Add a small delay to ensure any previous write operations have completed
+            import time
+            time.sleep(2)
+            
             for sheet_name in column_sheets:
                 try:
                     # Read the column sheet
@@ -185,8 +189,8 @@ class RawFilesEnhancer:
                         # Update the column_group for primary key columns
                         updated_df = self._update_primary_key_groups(columns_df, pk_candidates)
                         
-                        # Write back to Excel - PRESERVE FORMATTING (frozen headers, filters)
-                        write_success = self.excel_utils.write_sheet_data_preserve_formatting(
+                        # Write back to Excel - Use regular write method which handles file locking better
+                        write_success = self.excel_utils.write_sheet_data(
                             self.workbook_path, sheet_name, updated_df
                         )
                         
@@ -196,6 +200,16 @@ class RawFilesEnhancer:
                             self.logger.info(f"✅ Primary key(s) identified for {sheet_name}: {pk_cols}")
                         else:
                             self.logger.error(f"Failed to write primary key updates to {sheet_name}")
+                            # Try alternative approach - save to backup and inform user
+                            backup_path = self.workbook_path.replace('.xlsx', '_pk_backup.xlsx')
+                            try:
+                                import shutil
+                                shutil.copy2(self.workbook_path, backup_path)
+                                fallback_success = self.excel_utils.write_sheet_data(backup_path, sheet_name, updated_df)
+                                if fallback_success:
+                                    self.logger.info(f"Primary keys saved to backup file: {backup_path}")
+                            except Exception as e:
+                                self.logger.error(f"Even backup save failed: {str(e)}")
                     else:
                         self.logger.info(f"No clear primary key candidates found for {sheet_name}")
                 
@@ -397,9 +411,22 @@ class RawFilesEnhancer:
         """Update the column_group for primary key columns."""
         updated_df = columns_df.copy()
         
-        # Update the Column Group for primary key candidates
-        mask = updated_df['Column Name'].isin(pk_candidates)
-        updated_df.loc[mask, 'Column Group'] = 'primary_key'
+        # Check which column name format is being used
+        if 'column_name' in updated_df.columns:
+            name_col = 'column_name'
+            group_col = 'column_group'
+        elif 'Column Name' in updated_df.columns:
+            name_col = 'Column Name'
+            group_col = 'Column Group'
+        else:
+            self.logger.error("No recognized column name column found")
+            return updated_df
+        
+        # Update the column_group for primary key candidates
+        mask = updated_df[name_col].isin(pk_candidates)
+        updated_df.loc[mask, group_col] = 'primary_key'
+        
+        self.logger.info(f"Updated {mask.sum()} columns with primary_key group")
         
         return updated_df
     

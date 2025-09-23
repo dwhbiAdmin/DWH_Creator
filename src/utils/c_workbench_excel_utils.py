@@ -189,8 +189,8 @@ class ExcelUtils:
                             print("File still locked after COM close. Please close Excel manually.")
                             return False
                         print("Workbook closed. Proceeding with update...")
-                        # Now update as normal
-                        result = ExcelUtils.write_sheet_data(file_path, sheet_name, data)
+                        # Now update as normal - use internal method to avoid recursion
+                        result = ExcelUtils._write_sheet_data_internal(file_path, sheet_name, data)
                         # Reopen workbook in Excel for user
                         print("Reopening workbook in Excel...")
                         excel.Workbooks.Open(os.path.abspath(file_path))
@@ -206,6 +206,22 @@ class ExcelUtils:
                     return False
 
             # Normal path when file not locked or doesn't exist
+            return ExcelUtils._write_sheet_data_internal(file_path, sheet_name, data)
+
+        except PermissionError:
+            print(f"Error: Permission denied writing to Excel file.")
+            print(f"The file may be open in another application: {file_path}")
+            print(f"Please close the file and try again.")
+            return False
+        except Exception as e:
+            print(f"Error writing Excel sheet: {str(e)}")
+            return False
+    
+    @staticmethod
+    def _write_sheet_data_internal(file_path: str, sheet_name: str, data: pd.DataFrame) -> bool:
+        """Internal method to write data without file locking checks."""
+        try:
+            # Normal path when file not locked or doesn't exist
             if os.path.exists(file_path):
                 with pd.ExcelWriter(file_path, mode='a', if_sheet_exists='replace', engine='openpyxl') as writer:
                     data.to_excel(writer, sheet_name=sheet_name, index=False)
@@ -216,13 +232,8 @@ class ExcelUtils:
 
             return True
 
-        except PermissionError:
-            print(f"Error: Permission denied writing to Excel file.")
-            print(f"The file may be open in another application: {file_path}")
-            print(f"Please close the file and try again.")
-            return False
         except Exception as e:
-            print(f"Error writing Excel sheet: {str(e)}")
+            print(f"Error in internal write: {str(e)}")
             return False
     
     @staticmethod

@@ -116,18 +116,35 @@ class AIWorkbenchManager:
     def _generate_artifact_comments(self) -> bool:
         """Generate AI comments for artifacts."""
         try:
-            artifacts_df = self.excel_utils.read_sheet_data(self.workbook_path, "Artifacts")
-            if artifacts_df.empty:
+            # Try different possible sheet names
+            artifacts_df = None
+            sheet_name_used = None
+            
+            for sheet_name in ["artifacts", "Artifacts"]:
+                try:
+                    artifacts_df = self.excel_utils.read_sheet_data(self.workbook_path, sheet_name)
+                    if not artifacts_df.empty:
+                        sheet_name_used = sheet_name
+                        break
+                except:
+                    continue
+            
+            if artifacts_df is None or artifacts_df.empty:
                 self.logger.info("No artifacts found to generate comments for")
                 return True
             
-            # Count artifacts needing comments
+            # Count artifacts needing comments - handle both column name formats
             artifacts_needing_comments = []
             for idx, row in artifacts_df.iterrows():
-                if pd.isna(row.get('Artifact Comment', '')) or row.get('Artifact Comment', '') == '':
-                    artifact_name = row.get('Artifact Name', '')
+                # Check both possible column name formats
+                comment_col = 'artifact_comment' if 'artifact_comment' in artifacts_df.columns else 'Artifact Comment'
+                name_col = 'artifact_name' if 'artifact_name' in artifacts_df.columns else 'Artifact Name'
+                stage_col = 'stage_name' if 'stage_name' in artifacts_df.columns else 'Stage Name'
+                
+                if pd.isna(row.get(comment_col, '')) or row.get(comment_col, '') == '':
+                    artifact_name = row.get(name_col, '')
                     if artifact_name:
-                        artifacts_needing_comments.append((idx, artifact_name, row.get('Stage Name', '')))
+                        artifacts_needing_comments.append((idx, artifact_name, row.get(stage_col, ''), comment_col))
             
             if not artifacts_needing_comments:
                 self.logger.info("All artifacts already have comments")
@@ -139,11 +156,11 @@ class AIWorkbenchManager:
             updated = False
             success_count = 0
             
-            for idx, artifact_name, stage_name in artifacts_needing_comments:
+            for idx, artifact_name, stage_name, comment_col in artifacts_needing_comments:
                 try:
                     comment = self.ai_generator.generate_artifact_comment(artifact_name, stage_name)
                     if comment:
-                        artifacts_df.at[idx, 'Artifact Comment'] = comment
+                        artifacts_df.at[idx, comment_col] = comment
                         updated = True
                         success_count += 1
                         self.logger.info(f"Generated comment for {artifact_name}: {comment}")
@@ -153,7 +170,7 @@ class AIWorkbenchManager:
                     self.logger.error(f"Error generating comment for {artifact_name}: {str(e)}")
             
             if updated:
-                write_success = self.excel_utils.write_sheet_data(self.workbook_path, "Artifacts", artifacts_df)
+                write_success = self.excel_utils.write_sheet_data(self.workbook_path, sheet_name_used, artifacts_df)
                 if write_success:
                     self.logger.info(f"Successfully generated {success_count}/{len(artifacts_needing_comments)} artifact comments")
                 return write_success
@@ -167,18 +184,36 @@ class AIWorkbenchManager:
     def _generate_column_comments(self) -> bool:
         """Generate AI comments for columns."""
         try:
-            columns_df = self.excel_utils.read_sheet_data(self.workbook_path, "Columns")
-            if columns_df.empty:
+            # Try different possible sheet names
+            columns_df = None
+            sheet_name_used = None
+            
+            for sheet_name in ["columns", "Columns"]:
+                try:
+                    columns_df = self.excel_utils.read_sheet_data(self.workbook_path, sheet_name)
+                    if not columns_df.empty:
+                        sheet_name_used = sheet_name
+                        break
+                except:
+                    continue
+            
+            if columns_df is None or columns_df.empty:
                 self.logger.info("No columns found to generate comments for")
                 return True
             
-            # Count columns needing comments
+            # Count columns needing comments - handle both column name formats
             columns_needing_comments = []
             for idx, row in columns_df.iterrows():
-                if pd.isna(row.get('Column Comment', '')) or row.get('Column Comment', '') == '':
-                    column_name = row.get('Column Name', '')
+                # Check both possible column name formats
+                comment_col = 'column_comment' if 'column_comment' in columns_df.columns else 'Column Comment'
+                name_col = 'column_name' if 'column_name' in columns_df.columns else 'Column Name'
+                type_col = 'data_type' if 'data_type' in columns_df.columns else 'Data Type'
+                artifact_col = 'artifact_id' if 'artifact_id' in columns_df.columns else 'Artifact ID'
+                
+                if pd.isna(row.get(comment_col, '')) or row.get(comment_col, '') == '':
+                    column_name = row.get(name_col, '')
                     if column_name:
-                        columns_needing_comments.append((idx, column_name, row.get('Data Type', ''), row.get('Artifact ID', '')))
+                        columns_needing_comments.append((idx, column_name, row.get(type_col, ''), row.get(artifact_col, ''), comment_col))
             
             if not columns_needing_comments:
                 self.logger.info("All columns already have comments")
@@ -190,11 +225,11 @@ class AIWorkbenchManager:
             updated = False
             success_count = 0
             
-            for idx, column_name, data_type, artifact_id in columns_needing_comments:
+            for idx, column_name, data_type, artifact_id, comment_col in columns_needing_comments:
                 try:
                     comment = self.ai_generator.generate_column_comment(column_name, data_type, artifact_id)
                     if comment:
-                        columns_df.at[idx, 'Column Comment'] = comment
+                        columns_df.at[idx, comment_col] = comment
                         updated = True
                         success_count += 1
                         self.logger.info(f"Generated comment for {column_name}: {comment}")
@@ -204,7 +239,7 @@ class AIWorkbenchManager:
                     self.logger.error(f"Error generating comment for {column_name}: {str(e)}")
             
             if updated:
-                write_success = self.excel_utils.write_sheet_data(self.workbook_path, "Columns", columns_df)
+                write_success = self.excel_utils.write_sheet_data(self.workbook_path, sheet_name_used, columns_df)
                 if write_success:
                     self.logger.info(f"Successfully generated {success_count}/{len(columns_needing_comments)} column comments")
                 return write_success

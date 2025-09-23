@@ -21,7 +21,7 @@ from backend.a_project_manager import ProjectManager
 from backend.c_workbench_manager import WorkbenchManager
 from utils.z_logger import Logger
 from utils.z_app_configuration import AppConfig
-from utils.c_workbench_enhance_utils import enhance_raw_files
+from utils.c_workbench_2_enhance_import_utils import enhance_raw_files
 
 # ANCHOR: ConsoleInterface Class Definition
 
@@ -454,12 +454,11 @@ class ConsoleInterface:
             print("1. Cascade All Artifacts")
             print("2. Cascade Specific Artifact")
             print("3. Preview Cascading")
-            print("4. Create Workbench Configuration")
-            print("5. List Artifacts with Upstream Relations")
+            print("4. List Artifacts with Upstream Relations")
             print("0. Back to Workbench Menu")
             print("-" * 25)
             
-            choice = self.get_user_choice(5)
+            choice = self.get_user_choice(4)
             
             if choice == 0:
                 break
@@ -470,8 +469,6 @@ class ConsoleInterface:
             elif choice == 3:
                 self._preview_cascading()
             elif choice == 4:
-                self._create_cascading_config()
-            elif choice == 5:
                 self._list_artifacts_with_upstream()
     
     def _cascade_all_artifacts(self):
@@ -594,48 +591,20 @@ class ConsoleInterface:
         
         input("Press Enter to continue...")
     
-    def _create_cascading_config(self):
-        """Create workbench configuration file using new WorkbenchConfigurationManager."""
-        print("\n⚙️  Create Workbench Configuration")
-        print("-" * 38)
-        
-        try:
-            print("This will create a configuration file with:")
-            print("• Complete AdventureWorks example structure")
-            print("• Stages, technical columns, relations, and data mappings")
-            print("• Ready-to-use default configuration")
-            
-            confirm = input("\nCreate configuration file? (y/N): ").strip().lower()
-            
-            if confirm == 'y':
-                print("\n⏳ Creating configuration file...")
-                
-                # Import the new WorkbenchConfigurationManager
-                import sys
-                from pathlib import Path
-                current_dir = Path(__file__).parent
-                src_dir = current_dir.parent
-                sys.path.insert(0, str(src_dir))
-                from utils.a_project_config_utils import WorkbenchConfigurationManager
-                
-                # Get project name from current project
-                project_name = Path(self.project_path).name.replace("Project_", "")
-                workbench_dir = Path(self.project_path) / "2_workbench"
-                
-                # Create configuration file
-                config_manager = WorkbenchConfigurationManager()
-                config_file_path = config_manager.create_project_configuration(str(workbench_dir), project_name)
-                
-                if config_file_path:
-                    print("✅ Workbench configuration created successfully!")
-                    print(f"📁 Created: {Path(config_file_path).name}")
-                else:
-                    print("❌ Failed to create configuration file. Check logs for details.")
-            else:
-                print("❌ Operation cancelled")
-                
-        except Exception as e:
-            print(f"❌ Error creating configuration: {str(e)}")
+    def _display_config_info(self):
+        """Display information about the integrated 7-sheet workbook configuration."""
+        print("\n📋 Workbench Configuration Information")
+        print("-" * 40)
+        print("✅ Your workbench already includes integrated configuration!")
+        print()
+        print("📊 Configuration is embedded in your workbook:")
+        print("   • conf_1_stages - Stage definitions and platform settings")
+        print("   • conf_2_technical_columns - System columns and data types")
+        print("   • conf_3_relations - Cascading and relationship logic")
+        print("   • conf_4_data_mappings - Data type mappings across platforms")
+        print()
+        print("💡 No separate configuration file needed with the 7-sheet approach!")
+        print("📁 All configuration is in your main workbook file.")
         
         input("Press Enter to continue...")
     

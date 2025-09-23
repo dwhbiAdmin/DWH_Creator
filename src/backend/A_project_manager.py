@@ -26,8 +26,7 @@ sys.path.insert(0, str(src_dir))
 
 from utils.a_project_file_utils import FileUtils
 from utils.z_logger import Logger
-from utils.a_project_config_utils import WorkbenchConfigurationManager
-from utils.a_project_setup_utils import WorkbenchSetupManager
+from utils.a_project_setup_default_Workbench_utils import WorkbenchSetupManager
 
 # ANCHOR: ProjectManager Class Definition
 
@@ -105,13 +104,9 @@ class ProjectManager:
                 elif stage_dir == "4_mart":
                     os.makedirs(os.path.join(stage_path, "DDLs"), exist_ok=True)
                     
-            # Create Excel workbook
+            # Create integrated Excel workbook with 7 sheets (3 visible + 4 hidden config)
             workbook_path = os.path.join(project_path, "2_workbench", f"workbench_{project_name}.xlsx")
-            self._create_excel_workbook(workbook_path, project_name)
-            
-            # Create project-specific workbench configuration file
-            config_path = os.path.join(project_path, "2_workbench", f"workbench_configuration_{project_name}.xlsx")
-            self._create_workbench_config(config_path, project_name)
+            self._create_integrated_workbook(workbook_path, project_name)
             
             self.logger.info(f"Project '{project_name}' created successfully at: {project_path}")
             return project_path
@@ -120,43 +115,27 @@ class ProjectManager:
             self.logger.error(f"Failed to create project: {str(e)}")
             raise
     
-    # ANCHOR: Excel Workbook Creation Methods
-    def _create_excel_workbook(self, workbook_path: str, project_name: str):
+    # ANCHOR: Integrated Workbook Creation Methods
+    def _create_integrated_workbook(self, workbook_path: str, project_name: str):
         """
-        Create the Excel workbook using the new WorkbenchSetupManager.
+        Create the integrated Excel workbook with 7 sheets using WorkbenchSetupManager.
+        Creates 3 visible sheets (stages, artifacts, columns) + 4 hidden config sheets.
         
         Args:
             workbook_path: Path where to create the workbook
             project_name: Name of the project
         """
         try:
-            # Use the new WorkbenchSetupManager to create the workbook
+            # Use the WorkbenchSetupManager to create the integrated 7-sheet workbook
             workbench_manager = WorkbenchSetupManager()
-            if workbench_manager.create_project_workbench_file(workbook_path, project_name):
-                self.logger.info(f"Created Excel workbook using WorkbenchSetupManager: {workbook_path}")
+            if workbench_manager.create_integrated_workbench_file(workbook_path, project_name):
+                self.logger.info(f"Created integrated 7-sheet workbook: {workbook_path}")
             else:
-                raise Exception(f"Failed to create Excel workbook: {workbook_path}")
+                raise Exception(f"Failed to create integrated workbook: {workbook_path}")
         except Exception as e:
-            self.logger.error(f"Error creating workbook with WorkbenchSetupManager: {str(e)}")
+            self.logger.error(f"Error creating integrated workbook: {str(e)}")
             raise
     
-    def _create_workbench_config(self, config_path: str, project_name: str):
-        """
-        Create project-specific workbench configuration file.
-        
-        Args:
-            config_path: Path where to create the configuration file
-            project_name: Name of the project for project-specific settings
-        """
-        try:
-            config_manager = WorkbenchConfigurationManager()
-            if config_manager.create_project_config_file(config_path, project_name):
-                self.logger.info(f"Created project-specific workbench configuration: {config_path}")
-            else:
-                raise Exception(f"Failed to create workbench configuration: {config_path}")
-        except Exception as e:
-            self.logger.error(f"Error creating workbench configuration: {str(e)}")
-            raise
     
     # ANCHOR: Project Management Methods
     def open_existing_project(self, project_path: str) -> bool:
