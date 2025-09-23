@@ -22,6 +22,7 @@ from utils.logger import Logger
 from utils.B_worksheet_config_manager import ConfigManager
 from utils.B_excel_utils import ExcelUtils
 from backend.Y_ai_manager import AIWorkbenchManager
+from utils.Y_ai_comment_generator import AICommentGenerator
 
 
 class RawFilesEnhancer:
@@ -47,6 +48,7 @@ class RawFilesEnhancer:
         self.config_manager = ConfigManager()
         self.excel_utils = ExcelUtils()
         self.workbook_path = workbook_path
+        self.api_key = api_key  # Store API key for AI generators
         
         # Initialize AI manager if API key provided
         self.ai_manager = None
@@ -183,8 +185,8 @@ class RawFilesEnhancer:
                         # Update the column_group for primary key columns
                         updated_df = self._update_primary_key_groups(columns_df, pk_candidates)
                         
-                        # Write back to Excel
-                        write_success = self.excel_utils.write_sheet_data(
+                        # Write back to Excel - PRESERVE FORMATTING (frozen headers, filters)
+                        write_success = self.excel_utils.write_sheet_data_preserve_formatting(
                             self.workbook_path, sheet_name, updated_df
                         )
                         
@@ -209,24 +211,93 @@ class RawFilesEnhancer:
             return False
     
     def generate_business_names(self) -> bool:
-        """Generate AI business names for columns."""
+        """Generate AI business names for columns using dedicated AI module."""
         try:
-            if not self.ai_manager:
-                self.logger.warning("AI manager not available. Generating simple business names.")
+            # Try to initialize AI comment generator if we have an API key
+            ai_generator = None
+            if hasattr(self, 'api_key') and self.api_key:
+                try:
+                    ai_generator = AICommentGenerator(self.api_key)
+                    if not ai_generator.is_available():
+                        ai_generator = None
+                except Exception as e:
+                    self.logger.warning(f"Could not initialize AI comment generator: {str(e)}")
+                    ai_generator = None
+            
+            if not ai_generator:
+                self.logger.warning("AI generator not available. Generating simple business names.")
                 return self._generate_simple_business_names()
             
-            success = self.ai_manager.generate_readable_column_names()
-            if success:
-                self.logger.info("✅ Business names generated successfully")
+            # Get column sheets to process
+            column_sheets = self._get_column_sheet_names()
+            if not column_sheets:
+                self.logger.warning("No column sheets found for business name generation")
+                return False
+            
+            updated_sheets = 0
+            for sheet_name in column_sheets:
+                try:
+                    # Read current column data
+                    columns_df = self.excel_utils.read_sheet_data(self.workbook_path, sheet_name)
+                    
+                    if columns_df.empty:
+                        continue
+                    
+                    # Prepare data for AI processing
+                    columns_data = []
+                    for _, row in columns_df.iterrows():
+                        column_name = row.get('column_name', row.get('Column Name', ''))
+                        data_type = row.get('data_type', row.get('Data Type', ''))
+                        current_business_name = row.get('column_business_name', row.get('Column Business Name', ''))
+                        
+                        # Only process if business name is empty and we have column name
+                        if column_name and (pd.isna(current_business_name) or current_business_name.strip() == ''):
+                            columns_data.append({
+                                'column_name': column_name,
+                                'data_type': data_type
+                            })
+                    
+                    if not columns_data:
+                        continue  # No columns need business names
+                    
+                    # Generate AI business names in batch
+                    self.logger.info(f"Generating AI business names for {len(columns_data)} columns in {sheet_name}")
+                    ai_business_names = ai_generator.generate_business_names_batch(columns_data)
+                    
+                    # Update the dataframe
+                    updated_df = columns_df.copy()
+                    for idx, row in updated_df.iterrows():
+                        column_name = row.get('column_name', row.get('Column Name', ''))
+                        
+                        if column_name in ai_business_names:
+                            # Update the correct column name format
+                            if 'column_business_name' in updated_df.columns:
+                                updated_df.at[idx, 'column_business_name'] = ai_business_names[column_name]
+                            elif 'Column Business Name' in updated_df.columns:
+                                updated_df.at[idx, 'Column Business Name'] = ai_business_names[column_name]
+                    
+                    # Write back to Excel - PRESERVE FORMATTING (frozen headers, filters)
+                    write_success = self.excel_utils.write_sheet_data_preserve_formatting(
+                        self.workbook_path, sheet_name, updated_df
+                    )
+                    
+                    if write_success:
+                        updated_sheets += 1
+                        self.logger.info(f"✅ AI business names updated for {sheet_name}")
+                
+                except Exception as e:
+                    self.logger.error(f"Error generating AI business names for {sheet_name}: {str(e)}")
+                    continue
+            
+            if updated_sheets > 0:
+                self.logger.info(f"✅ AI business names generated for {updated_sheets} sheets")
+                return True
             else:
-                self.logger.warning("⚠️ Some business names could not be generated")
-                # Fallback to simple business names
+                self.logger.warning("⚠️ No AI business names were generated, falling back to simple names")
                 return self._generate_simple_business_names()
-            
-            return success
             
         except Exception as e:
-            self.logger.error(f"Error generating business names: {str(e)}")
+            self.logger.error(f"Error generating AI business names: {str(e)}")
             # Fallback to simple business names
             return self._generate_simple_business_names()
     
@@ -236,7 +307,18 @@ class RawFilesEnhancer:
             from openpyxl import load_workbook
             
             wb = load_workbook(self.workbook_path, read_only=True)
-            column_sheets = [sheet for sheet in wb.sheetnames if sheet.startswith('Columns')]
+            
+            # Look for both individual column sheets (Columns1, Columns2, etc.) and consolidated sheet (columns)
+            column_sheets = []
+            
+            # Check for individual column sheets (from CSV imports)
+            individual_sheets = [sheet for sheet in wb.sheetnames if sheet.startswith('Columns') and sheet != 'Columns']
+            column_sheets.extend(individual_sheets)
+            
+            # Check for consolidated columns sheet (standard workbook)
+            if 'columns' in wb.sheetnames:
+                column_sheets.append('columns')
+            
             wb.close()
             
             return column_sheets
@@ -255,9 +337,10 @@ class RawFilesEnhancer:
             
             # Check each column for primary key characteristics
             for _, row in columns_df.iterrows():
-                column_name = row.get('Column Name', '')
-                data_type = row.get('Data Type', '')
-                column_group = row.get('Column Group', '')
+                # Try both column name formats
+                column_name = row.get('column_name', row.get('Column Name', ''))
+                data_type = row.get('data_type', row.get('Data Type', ''))
+                column_group = row.get('column_group', row.get('Column Group', ''))
                 
                 # Skip if already marked as primary key
                 if column_group == 'primary_key':
@@ -344,16 +427,21 @@ class RawFilesEnhancer:
                     updated_df = columns_df.copy()
                     
                     for idx, row in updated_df.iterrows():
-                        column_name = row.get('Column Name', '')
-                        current_business_name = row.get('Column Business Name', '')
+                        # Try both column name formats (with spaces/underscores)
+                        column_name = row.get('column_name', row.get('Column Name', ''))
+                        current_business_name = row.get('column_business_name', row.get('Column Business Name', ''))
                         
                         # Only generate if business name is empty
                         if pd.isna(current_business_name) or current_business_name.strip() == '':
                             business_name = self._create_simple_business_name(column_name)
-                            updated_df.at[idx, 'Column Business Name'] = business_name
+                            # Update the correct column name format
+                            if 'column_business_name' in updated_df.columns:
+                                updated_df.at[idx, 'column_business_name'] = business_name
+                            elif 'Column Business Name' in updated_df.columns:
+                                updated_df.at[idx, 'Column Business Name'] = business_name
                     
-                    # Write back to Excel
-                    write_success = self.excel_utils.write_sheet_data(
+                    # Write back to Excel - PRESERVE FORMATTING (frozen headers, filters)
+                    write_success = self.excel_utils.write_sheet_data_preserve_formatting(
                         self.workbook_path, sheet_name, updated_df
                     )
                     
@@ -372,27 +460,58 @@ class RawFilesEnhancer:
             return False
     
     def _create_simple_business_name(self, column_name: str) -> str:
-        """Create a simple business name from column name."""
-        # Convert snake_case and camelCase to Title Case
-        business_name = re.sub(r'([a-z])([A-Z])', r'\1 \2', column_name)  # camelCase
-        business_name = business_name.replace('_', ' ')  # snake_case
-        business_name = business_name.title()  # Title case
+        """Create a simple business name from column name in snake_case format."""
+        # Start with the original column name in lowercase
+        business_name = column_name.lower()
         
-        # Clean up common abbreviations
+        # Enhanced abbreviations and common patterns for snake_case
         replacements = {
-            ' Id': ' ID',
-            ' Pk': ' Primary Key',
-            ' Fk': ' Foreign Key',
-            ' Dt': ' Date',
-            ' Ts': ' Timestamp',
-            ' Qty': ' Quantity',
-            ' Amt': ' Amount',
-            ' Desc': ' Description',
-            ' Addr': ' Address',
-            ' Num': ' Number',
-            ' Cd': ' Code'
+            # IDs and Keys
+            'cust_id': 'customer_id',
+            'cust_': 'customer_',
+            'prod_id': 'product_id',
+            'prod_': 'product_',
+            'ord_id': 'order_id',
+            'ord_': 'order_',
+            'emp_id': 'employee_id',
+            'emp_': 'employee_',
+            'acct_id': 'account_id',
+            'acct_': 'account_',
+            'clr_id': 'color_id',
+            'clr_': 'color_',
+            
+            # Names and descriptions
+            'cust_name': 'customer_name',
+            'prod_name': 'product_name',
+            'emp_name': 'employee_name',
+            
+            # Dates and Times
+            '_dt': '_date',
+            '_ts': '_timestamp',
+            '_tm': '_time',
+            
+            # Quantities and Amounts
+            'qty': 'quantity',
+            '_amt': '_amount',
+            '_num': '_number',
+            '_cnt': '_count',
+            
+            # Descriptions and Text
+            '_desc': '_description',
+            '_nm': '_name',
+            '_addr': '_address',
+            '_cd': '_code',
+            '_sts': '_status',
+            '_cat': '_category',
+            
+            # Common business terms
+            'm_or_f': 'gender',
+            '_ref': '_reference',
+            '_val': '_value',
+            '_pct': '_percentage'
         }
         
+        # Apply replacements
         for old, new in replacements.items():
             business_name = business_name.replace(old, new)
         

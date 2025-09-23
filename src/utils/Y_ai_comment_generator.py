@@ -235,6 +235,33 @@ class AICommentGenerator:
             print(f"AI API error for readable name {column_name}: {e}")
             return ""  # Return empty on error
     
+    def generate_business_names_batch(self, columns_data: List[Dict]) -> Dict[str, str]:
+        """
+        Generate business names for multiple columns efficiently.
+        
+        Args:
+            columns_data: List of dictionaries with 'column_name' and 'data_type' keys
+            
+        Returns:
+            Dictionary mapping column names to business names
+        """
+        business_names = {}
+        
+        if not self.client:
+            return business_names  # Return empty if no AI available
+        
+        # Process columns in batches to avoid API limits
+        for column_data in columns_data:
+            column_name = column_data.get('column_name', '')
+            data_type = column_data.get('data_type', '')
+            
+            if column_name:
+                business_name = self.generate_readable_column_name(column_name, data_type)
+                if business_name:
+                    business_names[column_name] = business_name
+        
+        return business_names
+    
     def is_available(self) -> bool:
         """
         Check if AI functionality is available.
