@@ -263,101 +263,91 @@ class WorkbenchSetupManager:
             logger.warning(f"Could not apply workbench formatting: {str(e)}")
 
     def _create_config_metadata_sheet(self, project_name: str) -> pd.DataFrame:
-        """Create conf_1_stages configuration sheet based on comprehensive AW_Sales_2 configuration structure."""
+        """Create conf_1_stages configuration sheet based on real configuration structure."""
         stages_data = {
-            'stage_id': ['s0', 's1', 's2', 's3', 's4', 's5', 's6'],
-            'stage_name': ['0_drop_zone', '1_bronze', '2_silver', '3_gold', '4_mart', '5_PBI_Model', '6_PBI_Reports'],
-            'platform': ['databricks', 'databricks', 'databricks', 'databricks', 'databricks', 'power bi', 'power bi'],
-            'artifact_side': ['source', 'source', 'source', 'business', 'business', 'business', 'business'],
+            'stage_id': ['s0', 's1', 's2', 's3', 's4'],
+            'stage_name': ['0_drop_zone', '1_bronze', '2_silver', '3_gold', '4_mart'],
+            'platform': ['databricks', 'databricks', 'databricks', 'databricks', 'databricks'],
+            'artifact_side': ['source', 'source', 'source', 'source', 'consumption'],
             'description': [
                 'Drop zone for raw data files',
                 'Bronze layer for raw structured data',
                 'Silver layer for cleaned and validated data',
                 'Gold layer for business-ready data',
-                'Data marts for specific business domains',
-                'Power BI semantic model layer',
-                'Power BI reports and dashboards'
+                'Data mart for specific business domains'
             ],
             'processing_notes': [
                 'Raw data ingestion, minimal processing',
                 'Raw storage with basic structure',
-                'Cleaned and dedublicated source data',
-                'Business ready, conformed dimensions',
-                'Analytical marts ,products , domains',
-                'Power BI optimized model',
-                'Report layer definitions'
+                'Cleaned and deduplicated source data',
+                'Business logic applied, conformed dimensions',
+                'Aggregated and optimized for reporting'
             ]
         }
         return pd.DataFrame(stages_data)
 
     def _create_config_settings_sheet(self) -> pd.DataFrame:
-        """Create conf_2_technical_columns configuration sheet based on comprehensive AW_Sales_2 configuration structure."""
+        """Create conf_2_technical_columns configuration sheet based on real configuration structure."""
         tech_columns_data = {
-            'stage_id': ['s1', 's1', 's1', 's1', 's1', 's1', 's1', 's2', 's2', 's2', 's2', 's3', 's3', 's3', 's3'],
-            'stage_name': ['1_bronze', '1_bronze', '1_bronze', '1_bronze', '1_bronze', '1_bronze', '1_bronze', 
-                          '2_silver', '2_silver', '2_silver', '2_silver', '3_gold', '3_gold', '3_gold', '3_gold'],
-            'column_name': ['__SourceSystem', '__SourceFileName', '__SourceFilePath', '__bronze_insert_dt', 
-                           '__bronzePartition_InsertYear', '__bronzePartition_InsertMonth', '__bronzePartition_insertDate',
-                           '__silver_last_changed_dt', '__silverPartition_xxxYear', '__silverPartition_xxxMonth', '__silverPartition_xxxDate',
-                           '__gold_last_changed_dt', '__goldPartition_XXXYear', '__goldPartition_XXXMonth', '__goldPartition_XXXDate'],
-            'data_type': ['STRING', 'STRING', 'STRING', 'TIMESTAMP', 'INT', 'INT', 'INT',
-                         'TIMESTAMP', 'INT', 'INT', 'INT', 'TIMESTAMP', 'INT', 'INT', 'INT'],
-            'include_in_tech_fields': [True, True, True, True, True, True, True, True, False, False, False, True, True, True, True],
-            'take_to_next_level': [1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
-            'artifact_type_specific': ['all', 'all', 'all', 'all', 'all', 'all', 'all', 'all', 'all', 'all', 'all', 'all', 'all', 'all', 'all'],
+            'stage_id': ['s1', 's1', 's1', 's1', 's1', 's2', 's2', 's2', 's3', 's3', 's4'],
+            'stage_name': ['1_bronze', '1_bronze', '1_bronze', '1_bronze', '1_bronze', 
+                          '2_silver', '2_silver', '2_silver', '3_gold', '3_gold', '4_mart'],
+            'column_name': ['__SourceSystem', '__SourceFileName', '__SourceFilePath', '__LoadDate', '__PartitionDate',
+                           '__IsActive', '__ValidFrom', '__ValidTo', '__BusinessKey', '__EffectiveDate', '__LastUpdated'],
+            'data_type': ['STRING', 'STRING', 'STRING', 'TIMESTAMP', 'DATE',
+                         'BOOLEAN', 'TIMESTAMP', 'TIMESTAMP', 'STRING', 'TIMESTAMP', 'TIMESTAMP'],
+            'include_in_tech_fields': [True, True, True, True, True, True, True, True, True, True, True],
+            'take_to_next_level': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+            'artifact_type_specific': ['all', 'all', 'all', 'all', 'all', 'all', 'scd2', 'scd2', 'all', 'all', 'all'],
             'description': [
                 'Source system identifier', 'Original source file name', 'Source file path',
-                'Bronze insertion timestamp', 'Partition year for bronze data', 'Partition month for bronze data', 'Partition date for bronze data',
-                'Silver last changed timestamp', 'Silver partition year (xxx = business date field)', 'Silver partition month (xxx = business date field)', 'Silver partition date (xxx = business date field)',
-                'Gold last changed timestamp', 'Gold partition year (XXX = business date field)', 'Gold partition month (XXX = business date field)', 'Gold partition date (XXX = business date field)'
+                'Load timestamp', 'Partition date for optimization', 'Record active flag',
+                'Valid from timestamp', 'Valid to timestamp', 'Business key identifier',
+                'Business effective date', 'Last updated timestamp'
             ]
         }
         return pd.DataFrame(tech_columns_data)
 
     def _create_config_validation_sheet(self) -> pd.DataFrame:
-        """Create conf_3_relations configuration sheet based on comprehensive AW_Sales_2 configuration structure."""
+        """Create conf_3_relations configuration sheet based on real configuration structure."""
         relations_data = {
-            'relation_type': ['main', 'get_key', 'lookup', 'pbi'],
+            'relation_type': ['main', 'get_key', 'lookup', 'custom'],
             'description': [
                 'Full column propagation with technical fields',
                 'Dimension key propagation for fact tables',
                 'Limited column lookup with priority-based selection',
-                'Power BI specific minimal cascading'
+                'Custom relation logic defined by user'
             ],
             'processing_logic': [
                 'Context-aware processing based on artifact type and stage transition',
                 'Extracts surrogate keys (SKs) and business keys (BKs) only',
                 'Priority order: SKs → BKs → Attributes, configurable limit',
-                'Keys and facts only for analytical performance'
+                'User-defined transformation logic'
             ],
-            'field_limit': ['No limit', 'Keys only', '3 (default)', 'Keys + Facts'],
+            'field_limit': ['No limit', 'Keys only', '3 (default)', 'User defined'],
             'use_cases': [
                 'Standard column cascading between stages',
                 'Foreign key relationships in fact tables',
                 'Reference lookups and denormalization',
-                'Power BI model optimization'
+                'Special business requirements'
             ]
         }
         return pd.DataFrame(relations_data)
 
     def _create_config_templates_sheet(self) -> pd.DataFrame:
-        """Create conf_4_data_mappings configuration sheet based on comprehensive AW_Sales_2 configuration structure."""
+        """Create conf_4_data_mappings configuration sheet based on real configuration structure."""
         data_mappings_data = {
-            'source': ['INT', 'BIGINT', 'SMALLINT', 'TINYINT', 'BIT', 'DECIMAL', 'NUMERIC', 'FLOAT', 'REAL', 'MONEY',
-                      'SMALLMONEY', 'CHAR', 'VARCHAR', 'TEXT', 'NCHAR', 'NVARCHAR', 'NTEXT', 'DATE', 'DATETIME', 'DATETIME2',
-                      'SMALLDATETIME', 'TIME', 'TIMESTAMP', 'BINARY', 'VARBINARY', 'IMAGE', 'UNIQUEIDENTIFIER', 'XML', 'JSON'],
-            'sql_server': ['INT', 'BIGINT', 'SMALLINT', 'TINYINT', 'BIT', 'DECIMAL(18,2)', 'NUMERIC(18,2)', 'FLOAT', 'REAL', 'MONEY',
-                          'SMALLMONEY', 'CHAR(255)', 'VARCHAR(255)', 'TEXT', 'NCHAR(255)', 'NVARCHAR(255)', 'NTEXT', 'DATE', 'DATETIME', 'DATETIME2',
-                          'SMALLDATETIME', 'TIME', 'DATETIME2', 'BINARY(8000)', 'VARBINARY(MAX)', 'VARBINARY(MAX)', 'UNIQUEIDENTIFIER', 'XML', 'NVARCHAR(MAX)'],
-            'databricks': ['INT', 'BIGINT', 'SMALLINT', 'TINYINT', 'BOOLEAN', 'DECIMAL(18,2)', 'DECIMAL(18,2)', 'FLOAT', 'REAL', 'DECIMAL(19,4)',
-                          'DECIMAL(10,4)', 'STRING', 'STRING', 'STRING', 'STRING', 'STRING', 'STRING', 'DATE', 'TIMESTAMP', 'TIMESTAMP',
-                          'TIMESTAMP', 'TIME', 'TIMESTAMP', 'BINARY', 'BINARY', 'BINARY', 'STRING', 'STRING', 'STRING'],
-            'power_bi': ['INT64', 'INT64', 'INT64', 'INT64', 'Boolean', 'Decimal', 'Decimal', 'Double', 'Double', 'Decimal',
-                        'Decimal', 'String', 'String', 'String', 'String', 'String', 'String', 'Date', 'DateTime', 'DateTime',
-                        'DateTime', 'Time', 'DateTime', 'Binary', 'Binary', 'Binary', 'String', 'String', 'String'],
-            'notes': ['Standard integer', 'Large integer', 'Small integer', 'Tiny integer', 'Boolean flag', 'Precise decimal', 'Numeric with precision', 'Floating point', 'Real number', 'Currency values',
-                     'Small currency', 'Fixed character', 'Variable character', 'Large text', 'Fixed Unicode', 'Variable Unicode', 'Large Unicode text', 'Date only', 'Legacy datetime', 'Enhanced datetime',
-                     'Small datetime', 'Time only', 'Timestamp', 'Fixed binary', 'Variable binary', 'Image/blob data', 'GUID/UUID', 'XML data', 'JSON data']
+            'source': ['INT', 'BIGINT', 'SMALLINT', 'DECIMAL', 'FLOAT', 'DOUBLE', 'STRING', 'VARCHAR', 'CHAR', 'BOOLEAN', 
+                      'DATE', 'TIMESTAMP', 'BINARY', 'ARRAY', 'MAP', 'STRUCT'],
+            'sql_server': ['INT', 'BIGINT', 'SMALLINT', 'DECIMAL', 'FLOAT', 'FLOAT', 'NVARCHAR', 'NVARCHAR', 'NCHAR', 'BIT',
+                          'DATE', 'DATETIME2', 'VARBINARY', 'NVARCHAR', 'NVARCHAR', 'NVARCHAR'],
+            'databricks': ['INT', 'BIGINT', 'SMALLINT', 'DECIMAL', 'FLOAT', 'DOUBLE', 'STRING', 'STRING', 'STRING', 'BOOLEAN',
+                          'DATE', 'TIMESTAMP', 'BINARY', 'ARRAY', 'MAP', 'STRUCT'],
+            'power_bi': ['INT64', 'INT64', 'INT64', 'DECIMAL', 'DOUBLE', 'DOUBLE', 'TEXT', 'TEXT', 'TEXT', 'TRUE/FALSE',
+                        'DATE', 'DATETIME', 'BINARY', 'TEXT', 'TEXT', 'TEXT'],
+            'notes': ['Standard integer', 'Large integer', 'Small integer', 'Decimal number', 'Single precision float', 
+                     'Double precision float', 'Text string', 'Variable length string', 'Fixed length string', 'Boolean flag',
+                     'Date only', 'Date and time', 'Binary data', 'Array collection', 'Key-value pairs', 'Structured data']
         }
         return pd.DataFrame(data_mappings_data)
 

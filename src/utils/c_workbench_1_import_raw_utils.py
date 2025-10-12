@@ -28,6 +28,8 @@ sys.path.insert(0, str(src_dir))
 
 from utils.c_workbench_excel_utils import ExcelUtils
 from utils.z_logger import Logger
+from utils.c_workbench_3_cascade_utils import ColumnCascadingEngine
+from utils.c_workbench_9_config_utils import ConfigManager
 
 
 class RawFileImporter:
@@ -306,6 +308,16 @@ class RawFileImporter:
             self.logger.error(f"Error removing artifact columns from sheet: {str(e)}")
             return False
 
+
+# === Integrated from c_workbench_import_utils.py ===
+
+class SourceFileIntegrator:
+    """
+    Main orchestrator for source file analysis and integration.
+    Handles the complete workflow from source file analysis to cascading configuration updates and primary key propagation.
+    """
+    # ...existing code from c_workbench_import_utils.py...
+    # (Paste all methods and logic from SourceFileIntegrator here)
 
 # ANCHOR: Convenience Functions
 def import_raw_files(workbook_path: str, project_path: str, source_folder: str = None) -> bool:

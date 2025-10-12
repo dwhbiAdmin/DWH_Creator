@@ -30,8 +30,8 @@ sys.path.insert(0, str(src_dir))
 
 from utils.c_workbench_excel_utils import ExcelUtils
 from utils.z_logger import Logger
-from utils.c_workbench_config_utils import ConfigManager
-from utils.c_workbench_cascade_utils import ColumnCascadingEngine
+from utils.c_workbench_9_config_utils import ConfigManager
+from utils.c_workbench_3_cascade_utils import ColumnCascadingEngine
 from utils.c_workbench_1_import_raw_utils import RawFileImporter
 from .z_ai_integration_manager import AIWorkbenchManager
 

@@ -12,7 +12,7 @@ Modules:
 - z_*: Shared utilities used across multiple areas
 """
 
-from .c_workbench_config_utils import ConfigManager
+from .c_workbench_9_config_utils import ConfigManager
 from .z_app_configuration import AppConfig
 from .z_logger import Logger
 from .a_project_file_utils import FileUtils

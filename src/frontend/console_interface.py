@@ -17,7 +17,7 @@ current_dir = Path(__file__).parent
 src_dir = current_dir.parent
 sys.path.insert(0, str(src_dir))
 
-from backend.a_project_manager import ProjectManager
+from backend.A_project_manager import ProjectManager
 from backend.c_workbench_manager import WorkbenchManager
 from utils.z_logger import Logger
 from utils.z_app_configuration import AppConfig

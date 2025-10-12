@@ -13,7 +13,7 @@ Modules:
 - z_ai_integration_manager: AI-powered workbench assistance (Shared utility)
 """
 
-from .a_project_manager import ProjectManager
+from .A_project_manager import ProjectManager
 from .c_workbench_manager import WorkbenchManager
 from .d_artifact_manager import ArtifactGenerator
 from .e_documentation_manager import GitManager

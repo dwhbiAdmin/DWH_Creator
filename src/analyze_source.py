@@ -22,7 +22,7 @@ current_dir = Path(__file__).parent
 src_dir = current_dir.parent
 sys.path.insert(0, str(src_dir))
 
-from utils.c_workbench_import_utils import SourceFileIntegrator
+from utils.c_workbench_1_import_raw_utils import SourceFileIntegrator
 from utils.z_logger import Logger
 
 def main():

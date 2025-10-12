@@ -18,7 +18,7 @@ current_dir = Path(__file__).parent
 src_dir = current_dir.parent
 sys.path.insert(0, str(src_dir))
 
-from utils.c_workbench_config_utils import ConfigManager
+from utils.c_workbench_9_config_utils import ConfigManager
 from utils.z_logger import Logger
 
 # ANCHOR: Enums and Constants
@@ -44,9 +44,11 @@ class RelationProcessor:
     Deterministic relation processing engine for enhanced column cascading.
     """
     
-    def __init__(self):
+    def __init__(self, workbook_path: str = None):
         self.config = ConfigManager()
         self.logger = Logger()
+        self.workbook_path = workbook_path
+        self._stage_name_map = None  # Cache for stage mapping
         
     # ANCHOR: Artifact Type Detection
     def detect_artifact_type(self, artifact_name: str, artifact_type_field: str = None) -> ArtifactType:
@@ -276,16 +278,74 @@ class RelationProcessor:
         
         return columns
     
+    def _load_stage_name_mapping(self) -> Dict[str, str]:
+        """
+        Load stage ID to stage name mapping from workbook's conf_1_stages sheet.
+        
+        Returns:
+            Dict mapping stage_id to stage_name (e.g., {'s0': '0_drop_zone', 's1': '1_bronze'})
+        """
+        if self._stage_name_map is not None:
+            return self._stage_name_map
+        
+        if not self.workbook_path:
+            # Fallback to default mapping if no workbook path provided
+            self._stage_name_map = {
+                's0': '0_drop_zone',
+                's1': '1_bronze',
+                's2': '2_silver',
+                's3': '3_gold',
+                's4': '4_mart',
+                's5': '5_PBI_Model',
+                's6': '6_PBI_Reports'
+            }
+            return self._stage_name_map
+        
+        try:
+            # Read stages configuration from conf_1_stages sheet
+            stages_df = pd.read_excel(self.workbook_path, sheet_name='conf_1_stages')
+            
+            # Create mapping from stage_id to stage_name
+            self._stage_name_map = {}
+            for _, row in stages_df.iterrows():
+                stage_id = row.get('stage_id', '')
+                stage_name = row.get('stage_name', '')
+                if stage_id and stage_name:
+                    self._stage_name_map[stage_id] = stage_name
+            
+            self.logger.info(f"Loaded stage mapping from workbook: {self._stage_name_map}")
+            return self._stage_name_map
+            
+        except Exception as e:
+            self.logger.warning(f"Could not load stage mapping from workbook: {e}. Using defaults.")
+            # Fallback to default mapping
+            self._stage_name_map = {
+                's0': '0_drop_zone',
+                's1': '1_bronze',
+                's2': '2_silver',
+                's3': '3_gold',
+                's4': '4_mart',
+                's5': '5_PBI_Model',
+                's6': '6_PBI_Reports'
+            }
+            return self._stage_name_map
+    
     def _get_technical_fields(self, stage: str, artifact_type: ArtifactType) -> List[Dict]:
         """Get stage and artifact-type specific technical fields."""
         
         technical_fields = []
         base_order = 1000  # Technical fields go at end
         
+        # Get stage mapping from workbook configuration
+        stage_name_map = self._load_stage_name_mapping()
+        
+        # Get the proper stage name for technical columns
+        stage_name = stage_name_map.get(stage, stage.replace('s', 'stage_'))
+        
         # Common technical fields for all stages
         common_fields = [
-            {'column_name': f'__{stage}_loadDate', 'data_type': 'datetime2', 'column_group': 'technical_fields'},
-            {'column_name': f'__{stage}_source', 'data_type': 'varchar(100)', 'column_group': 'technical_fields'},
+            {'column_name': f'__{stage_name}_loadDate', 'data_type': 'datetime2', 'column_group': 'technical_fields'},
+            {'column_name': f'__{stage_name}_source', 'data_type': 'varchar(100)', 'column_group': 'technical_fields'},
         ]
         
         # Stage-specific technical fields

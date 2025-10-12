@@ -21,7 +21,7 @@ sys.path.insert(0, str(src_dir))
 
 from utils.c_workbench_excel_utils import ExcelUtils
 from utils.z_logger import Logger
-from utils.c_workbench_config_utils import ConfigManager
+from utils.c_workbench_9_config_utils import ConfigManager
 from utils.d_artifact_relation_utils import RelationProcessor, ArtifactType
 
 # ANCHOR: Enums and Constants
@@ -58,8 +58,8 @@ class ColumnCascadingEngine:
         self.logger = Logger()
         self.config_manager = ConfigManager()
         
-        # Initialize enhanced relation processor
-        self.relation_processor = RelationProcessor()
+        # Initialize enhanced relation processor with workbook path for dynamic stage mapping
+        self.relation_processor = RelationProcessor(workbook_path=workbook_path)
         
         # Initialize global column ID tracking
         self._global_column_id_counter = None
@@ -139,7 +139,7 @@ class ColumnCascadingEngine:
         
         try:
             # Read current workbook data
-            artifacts_df = self.excel_utils.read_sheet_data(self.workbook_path, 'Artifacts')
+            artifacts_df = self.excel_utils.read_sheet_data(self.workbook_path, 'artifacts')
             
             # Reset the global counter to start fresh
             self._global_column_id_counter = 0
@@ -150,7 +150,7 @@ class ColumnCascadingEngine:
             
             # Save empty columns sheet
             self.excel_utils.write_sheet_data(
-                self.workbook_path, 'Columns', empty_columns_df
+                self.workbook_path, 'columns', empty_columns_df
             )
             
             self.logger.info("Cleared existing columns, starting regeneration")
@@ -247,8 +247,8 @@ class ColumnCascadingEngine:
             self.logger.info("Starting cascade for all missing artifacts")
             
             # Load workbook data
-            artifacts_df = self.excel_utils.read_sheet_data(self.workbook_path, "Artifacts")
-            columns_df = self.excel_utils.read_sheet_data(self.workbook_path, "Columns")
+            artifacts_df = self.excel_utils.read_sheet_data(self.workbook_path, "artifacts")
+            columns_df = self.excel_utils.read_sheet_data(self.workbook_path, "columns")
             
             # Find artifacts that have no columns
             artifacts_with_columns = set(columns_df['artifact_id'].unique())
@@ -446,9 +446,9 @@ class ColumnCascadingEngine:
             self.logger.info(f"Starting column cascading for artifact {artifact_id}")
             
             # Load workbook data
-            artifacts_df = self.excel_utils.read_sheet_data(self.workbook_path, "Artifacts")
-            columns_df = self.excel_utils.read_sheet_data(self.workbook_path, "Columns")
-            stages_df = self.excel_utils.read_sheet_data(self.workbook_path, "Stages")
+            artifacts_df = self.excel_utils.read_sheet_data(self.workbook_path, "artifacts")
+            columns_df = self.excel_utils.read_sheet_data(self.workbook_path, "columns")
+            stages_df = self.excel_utils.read_sheet_data(self.workbook_path, "stages")
             
             # Find the target artifact
             target_artifact_row = artifacts_df[artifacts_df['artifact_id'] == artifact_id]
@@ -517,12 +517,12 @@ class ColumnCascadingEngine:
                 filtered_columns = self._remove_duplicate_columns(all_new_columns, columns_df, artifact_id)
                 
                 if filtered_columns:
-                    # Add new columns to the workbook
-                    updated_columns_df = pd.concat([columns_df, pd.DataFrame(filtered_columns)], ignore_index=True)
-                    self.excel_utils.write_sheet_data(self.workbook_path, "Columns", updated_columns_df)
+                    # Add new columns to the workbook (append only - never overwrite headers)
+                    filtered_columns_df = pd.DataFrame(filtered_columns)
+                    self.excel_utils.append_data_preserve_structure(self.workbook_path, "columns", filtered_columns_df)
                     
                     # Apply formatting to the Columns sheet
-                    self.excel_utils.apply_sheet_formatting(self.workbook_path, "Columns")
+                    self.excel_utils.apply_sheet_formatting(self.workbook_path, "columns")
                     
                     self.logger.info(f"Successfully cascaded {len(filtered_columns)} columns for artifact {artifact_id}")
                     
@@ -787,21 +787,19 @@ class ColumnCascadingEngine:
             # Convert data type for target platform
             converted_type = self._convert_data_type(processed_col['data_type'], target_platform)
             
-            # Generate AI comments and business names if not provided
-            column_comment = processed_col.get('Column Comment', '')
-            column_business_name = processed_col.get('Column Business Name', '')
+            # Get column_comment and column_business_name from upstream (already in processed_col)
+            # AI is ONLY used in stage s0 (0_drop_zone) during initial import/enhancement
+            # For all cascade operations, we COPY these values from the upstream stage
+            column_comment = processed_col.get('column_comment', processed_col.get('Column Comment', ''))
+            column_business_name = processed_col.get('column_business_name', processed_col.get('Column Business Name', ''))
             
-            # Generate AI content if missing
-            if not column_comment or not column_business_name:
-                ai_content = self._generate_ai_column_content(
-                    processed_col['column_name'], 
-                    target_artifact_name, 
-                    converted_type
-                )
-                if not column_comment:
-                    column_comment = ai_content.get('comment', '')
-                if not column_business_name:
-                    column_business_name = ai_content.get('business_name', '')
+            # NEVER generate AI content during cascade operations
+            # These should already exist from the s0 stage where AI was used initially
+            # If they're missing, use fallback values instead of calling AI
+            if not column_comment:
+                column_comment = f"Data field for {processed_col['column_name']}"
+            if not column_business_name:
+                column_business_name = processed_col['column_name']
             
             # Determine column group based on proper rules
             column_group = self._determine_column_group(
@@ -810,6 +808,7 @@ class ColumnCascadingEngine:
                 converted_type
             )
             
+            # CANONICAL ORDER: Must match a_project_setup_default_Workbench_utils.py
             new_column = {
                 'stage_id': target_stage_id,
                 'stage_name': target_stage_name,
@@ -817,11 +816,11 @@ class ColumnCascadingEngine:
                 'artifact_name': target_artifact_name,
                 'column_id': self._get_next_column_id(),
                 'column_name': processed_col['column_name'],
-                'order': processed_col.get('order', ordinal),
                 'data_type': converted_type,
-                'column_comment': column_comment,
+                'order': processed_col.get('order', ordinal),
                 'column_business_name': column_business_name,
-                'column_group': column_group
+                'column_group': column_group,
+                'column_comment': column_comment
             }
             new_columns.append(new_column)
             ordinal += 1
@@ -1363,7 +1362,7 @@ class ColumnCascadingEngine:
         if self._global_column_id_counter is None:
             # Start fresh - find the highest existing ID and continue from there
             try:
-                columns_df = self.excel_utils.read_sheet_data(self.workbook_path, 'Columns')
+                columns_df = self.excel_utils.read_sheet_data(self.workbook_path, 'columns')
                 max_id = 0
                 if not columns_df.empty and 'Column ID' in columns_df.columns:
                     # Extract numeric parts from existing IDs (format: c1, c2, c3, etc.)
@@ -1387,7 +1386,7 @@ class ColumnCascadingEngine:
     def _get_next_column_order(self, artifact_id: str) -> int:
         """Get next order number for columns in an artifact."""
         try:
-            columns_df = self.excel_utils.read_sheet_data(self.workbook_path, 'Columns')
+            columns_df = self.excel_utils.read_sheet_data(self.workbook_path, 'columns')
             if not columns_df.empty and 'artifact_id' in columns_df.columns and 'order' in columns_df.columns:
                 artifact_columns = columns_df[columns_df['artifact_id'] == artifact_id]
                 if not artifact_columns.empty:
@@ -1646,6 +1645,8 @@ class ColumnCascadingEngine:
     def _generate_ai_column_content(self, column_name: str, artifact_name: str, data_type: str) -> Dict[str, str]:
         """
         Generate AI-powered column comment and business name.
+        NOTE: This should ONLY be called for stage s0 (0_drop_zone) during initial import.
+        For all other stages, column_business_name and column_comment are copied from upstream.
         
         Args:
             column_name: Name of the column
@@ -1665,12 +1666,12 @@ class ColumnCascadingEngine:
                 
                 # Generate comment
                 comment = ai_workbench.ai_generator.generate_column_comment(
-                    column_name, artifact_name, data_type
+                    column_name, data_type, artifact_name
                 )
                 
-                # Generate business name
-                business_name = ai_workbench.ai_generator.generate_business_name(
-                    column_name, artifact_name
+                # Generate business name using generate_readable_column_name (the actual method name)
+                business_name = ai_workbench.ai_generator.generate_readable_column_name(
+                    column_name, data_type
                 )
                 
                 return {

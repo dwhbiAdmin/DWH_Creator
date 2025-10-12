@@ -23,8 +23,8 @@ current_dir = Path(__file__).parent
 src_dir = current_dir.parent / "src"
 sys.path.insert(0, str(src_dir))
 
-from utils.c_workbench_cascade_utils import ColumnCascadingEngine, UpstreamRelationType
-from utils.c_workbench_config_utils import ConfigManager
+from utils.c_workbench_3_cascade_utils import ColumnCascadingEngine, UpstreamRelationType
+from utils.c_workbench_9_config_utils import ConfigManager
 from backend.c_workbench_manager import WorkbenchManager
 
 class TestColumnCascadingEngine:
