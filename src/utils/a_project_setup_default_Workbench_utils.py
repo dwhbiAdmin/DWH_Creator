@@ -186,6 +186,7 @@ class WorkbenchSetupManager:
         Structure matches workbench requirements - DO NOT CHANGE WITHOUT PERMISSION."""
         
         # Define column structure for columns sheet - exact order as specified
+        # Updated structure with new fields (columns L-P) - moved after column_group and column_comment
         columns_columns = [
             'stage_id',
             'stage_name',
@@ -197,7 +198,12 @@ class WorkbenchSetupManager:
             'order',
             'column_business_name',
             'column_group',
-            'column_comment'
+            'column_comment',
+            'source_column_name',           # New field (column L)
+            'lookup_fields',                # New field (column M)
+            'etl_simple_trnasformation',    # New field (column N)
+            'ai_transformation_prompt',     # New field (column O)
+            'etl_ai_transformation'         # New field (column P)
         ]
         
         # Return empty DataFrame with just the column structure
@@ -291,26 +297,18 @@ class WorkbenchSetupManager:
         return pd.DataFrame(stages_data)
 
     def _create_config_settings_sheet(self) -> pd.DataFrame:
-        """Create conf_2_technical_columns configuration sheet based on comprehensive AW_Sales_2 configuration structure."""
+        """Create conf_2_technical_columns configuration sheet with simplified structure: stage_id, column_name, data_type, group, order."""
         tech_columns_data = {
             'stage_id': ['s1', 's1', 's1', 's1', 's1', 's1', 's1', 's2', 's2', 's2', 's2', 's3', 's3', 's3', 's3'],
-            'stage_name': ['1_bronze', '1_bronze', '1_bronze', '1_bronze', '1_bronze', '1_bronze', '1_bronze', 
-                          '2_silver', '2_silver', '2_silver', '2_silver', '3_gold', '3_gold', '3_gold', '3_gold'],
             'column_name': ['__SourceSystem', '__SourceFileName', '__SourceFilePath', '__bronze_insert_dt', 
                            '__bronzePartition_InsertYear', '__bronzePartition_InsertMonth', '__bronzePartition_insertDate',
                            '__silver_last_changed_dt', '__silverPartition_xxxYear', '__silverPartition_xxxMonth', '__silverPartition_xxxDate',
                            '__gold_last_changed_dt', '__goldPartition_XXXYear', '__goldPartition_XXXMonth', '__goldPartition_XXXDate'],
             'data_type': ['STRING', 'STRING', 'STRING', 'TIMESTAMP', 'INT', 'INT', 'INT',
                          'TIMESTAMP', 'INT', 'INT', 'INT', 'TIMESTAMP', 'INT', 'INT', 'INT'],
-            'include_in_tech_fields': [True, True, True, True, True, True, True, True, False, False, False, True, True, True, True],
-            'take_to_next_level': [1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
-            'artifact_type_specific': ['all', 'all', 'all', 'all', 'all', 'all', 'all', 'all', 'all', 'all', 'all', 'all', 'all', 'all', 'all'],
-            'description': [
-                'Source system identifier', 'Original source file name', 'Source file path',
-                'Bronze insertion timestamp', 'Partition year for bronze data', 'Partition month for bronze data', 'Partition date for bronze data',
-                'Silver last changed timestamp', 'Silver partition year (xxx = business date field)', 'Silver partition month (xxx = business date field)', 'Silver partition date (xxx = business date field)',
-                'Gold last changed timestamp', 'Gold partition year (XXX = business date field)', 'Gold partition month (XXX = business date field)', 'Gold partition date (XXX = business date field)'
-            ]
+            'group': ['technical', 'technical', 'technical', 'technical', 'technical', 'technical', 'technical',
+                     'technical', 'technical', 'technical', 'technical', 'technical', 'technical', 'technical', 'technical'],
+            'order': [1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 1, 2, 3, 4]
         }
         return pd.DataFrame(tech_columns_data)
 

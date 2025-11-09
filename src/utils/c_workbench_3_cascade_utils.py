@@ -355,33 +355,25 @@ class ColumnCascadingEngine:
             # Convert DataFrame to nested dictionary structure
             config = {}
             for _, row in df.iterrows():
-                # Use correct column names from cascading config
+                # Use new simplified column structure: stage_id, column_name, data_type, group, order
                 stage_id = row.get('stage_id', '')
-                stage_name = row.get('stage_name', '')
                 column_name = row.get('column_name', '')
                 data_type = row.get('data_type', '')
-                include_in_tech_fields = row.get('include_in_tech_fields', False)
-                take_to_next_level = row.get('take_to_next_level', False)
-                artifact_type_specific = row.get('artifact_type_specific', '')
-                description = row.get('description', '')
+                group = row.get('group', 'technical')  # Default to 'technical' if not specified
+                order = row.get('order', 0)
                 
-                # Use stage_id as primary key, fallback to stage name
-                stage_key = stage_id if stage_id else stage_name
-                
-                if not stage_key:
+                if not stage_id:
                     self.logger.warning(f"Skipping row with no stage identifier: {dict(row)}")
                     continue
                 
-                if stage_key not in config:
-                    config[stage_key] = []
+                if stage_id not in config:
+                    config[stage_id] = []
                 
-                config[stage_key].append({
+                config[stage_id].append({
                     'column_name': column_name,
                     'data_type': data_type,
-                    'include_in_tech_fields': include_in_tech_fields,
-                    'take_to_next_level': take_to_next_level,
-                    'artifact_type_specific': artifact_type_specific,
-                    'description': description
+                    'group': group,
+                    'order': order
                 })
             
             self.logger.info(f"Loaded technical columns for stages: {list(config.keys())}")
@@ -393,29 +385,29 @@ class ColumnCascadingEngine:
             return self._create_default_technical_columns()
     
     def _create_default_technical_columns(self) -> Dict:
-        """Create default technical columns configuration as fallback when config file is not available."""
+        """Create default technical columns configuration as fallback with new simplified structure."""
         self.logger.warning("Using hardcoded default technical columns - should load from cascading config")
         return {
             's1': [  # bronze stage
-                {'column_name': '__SourceSystem', 'data_type': 'string', 'include_in_tech_fields': False, 'take_to_next_level': False, 'artifact_type_specific': ''},
-                {'column_name': '__SourceFileName', 'data_type': 'string', 'include_in_tech_fields': False, 'take_to_next_level': False, 'artifact_type_specific': ''},
-                {'column_name': '__SourceFilePath', 'data_type': 'string', 'include_in_tech_fields': False, 'take_to_next_level': False, 'artifact_type_specific': ''},
-                {'column_name': '__bronze_insertDT', 'data_type': 'timestamp', 'include_in_tech_fields': False, 'take_to_next_level': False, 'artifact_type_specific': ''},
-                {'column_name': '__bronzePartition_InsertYear', 'data_type': 'int', 'include_in_tech_fields': False, 'take_to_next_level': False, 'artifact_type_specific': ''},
-                {'column_name': '__bronzePartition_InsertMonth', 'data_type': 'int', 'include_in_tech_fields': False, 'take_to_next_level': False, 'artifact_type_specific': ''},
-                {'column_name': '__bronzePartition_insertDate', 'data_type': 'int', 'include_in_tech_fields': False, 'take_to_next_level': False, 'artifact_type_specific': ''}
+                {'column_name': '__SourceSystem', 'data_type': 'string', 'group': 'technical', 'order': 1},
+                {'column_name': '__SourceFileName', 'data_type': 'string', 'group': 'technical', 'order': 2},
+                {'column_name': '__SourceFilePath', 'data_type': 'string', 'group': 'technical', 'order': 3},
+                {'column_name': '__bronze_insertDT', 'data_type': 'timestamp', 'group': 'technical', 'order': 4},
+                {'column_name': '__bronzePartition_InsertYear', 'data_type': 'int', 'group': 'technical', 'order': 5},
+                {'column_name': '__bronzePartition_InsertMonth', 'data_type': 'int', 'group': 'technical', 'order': 6},
+                {'column_name': '__bronzePartition_insertDate', 'data_type': 'int', 'group': 'technical', 'order': 7}
             ],
             's2': [  # silver stage
-                {'column_name': '__silver_lastChanged_DT', 'data_type': 'timestamp', 'include_in_tech_fields': False, 'take_to_next_level': False, 'artifact_type_specific': ''},
-                {'column_name': '__silverPartition_xxxYear', 'data_type': 'integer', 'include_in_tech_fields': True, 'take_to_next_level': True, 'artifact_type_specific': ''},
-                {'column_name': '__silverPartition_xxxMonth', 'data_type': 'integer', 'include_in_tech_fields': True, 'take_to_next_level': True, 'artifact_type_specific': ''},
-                {'column_name': '__silverPartition_xxxDate', 'data_type': 'integer', 'include_in_tech_fields': True, 'take_to_next_level': True, 'artifact_type_specific': ''}
+                {'column_name': '__silver_lastChanged_DT', 'data_type': 'timestamp', 'group': 'technical', 'order': 1},
+                {'column_name': '__silverPartition_xxxYear', 'data_type': 'integer', 'group': 'technical', 'order': 2},
+                {'column_name': '__silverPartition_xxxMonth', 'data_type': 'integer', 'group': 'technical', 'order': 3},
+                {'column_name': '__silverPartition_xxxDate', 'data_type': 'integer', 'group': 'technical', 'order': 4}
             ],
             's3': [  # gold stage
-                {'column_name': '__gold_lastChanged_DT', 'data_type': 'timestamp', 'include_in_tech_fields': False, 'take_to_next_level': False, 'artifact_type_specific': ''},
-                {'column_name': '__goldPartition_XXXYear', 'data_type': 'integer', 'include_in_tech_fields': True, 'take_to_next_level': True, 'artifact_type_specific': ''},
-                {'column_name': '__goldPartition_XXXMonth', 'data_type': 'integer', 'include_in_tech_fields': True, 'take_to_next_level': True, 'artifact_type_specific': ''},
-                {'column_name': '__goldPartition_XXXDate', 'data_type': 'integer', 'include_in_tech_fields': True, 'take_to_next_level': True, 'artifact_type_specific': ''}
+                {'column_name': '__gold_lastChanged_DT', 'data_type': 'timestamp', 'group': 'technical', 'order': 1},
+                {'column_name': '__goldPartition_XXXYear', 'data_type': 'integer', 'group': 'technical', 'order': 2},
+                {'column_name': '__goldPartition_XXXMonth', 'data_type': 'integer', 'group': 'technical', 'order': 3},
+                {'column_name': '__goldPartition_XXXDate', 'data_type': 'integer', 'group': 'technical', 'order': 4}
             ],
             # Fallback stage names for backward compatibility
             'bronze': [
@@ -617,7 +609,13 @@ class ColumnCascadingEngine:
             'data_type': 'BIGINT',
             'column_comment': f'Surrogate key for {dim_name} dimension',
             'column_business_name': f'{dim_name}_SK',
-            'column_group': 'SKs'
+            'column_group': 'SKs',
+            # New fields (columns I-M)
+            'source_column_name': f"{dim_name}_SK",
+            'lookup_fields': '',
+            'etl_simple_trnasformation': '',
+            'ai_transformation_prompt': '',
+            'etl_ai_transformation': ''
         }
         key_columns.append(sk_column)
         ordinal += 1
@@ -633,7 +631,13 @@ class ColumnCascadingEngine:
             'data_type': 'BIGINT',
             'column_comment': f'Business key for {dim_name} dimension',
             'column_business_name': f'{dim_name}_BK',
-            'column_group': 'BKs'
+            'column_group': 'BKs',
+            # New fields (columns I-M)
+            'source_column_name': f"{dim_name}_BK",
+            'lookup_fields': '',
+            'etl_simple_trnasformation': '',
+            'ai_transformation_prompt': '',
+            'etl_ai_transformation': ''
         }
         key_columns.append(bk_column)
         ordinal += 1
@@ -820,7 +824,13 @@ class ColumnCascadingEngine:
                 'order': processed_col.get('order', ordinal),
                 'column_business_name': column_business_name,
                 'column_group': column_group,
-                'column_comment': column_comment
+                'column_comment': column_comment,
+                # New fields (columns I-M)
+                'source_column_name': processed_col.get('source_column_name', processed_col['column_name']),
+                'lookup_fields': processed_col.get('lookup_fields', ''),
+                'etl_simple_trnasformation': processed_col.get('etl_simple_trnasformation', ''),
+                'ai_transformation_prompt': processed_col.get('ai_transformation_prompt', ''),
+                'etl_ai_transformation': processed_col.get('etl_ai_transformation', '')
             }
             new_columns.append(new_column)
             ordinal += 1
@@ -1207,7 +1217,13 @@ class ColumnCascadingEngine:
             'column_comment': f"Cascaded from {source_col.get('column_name', '')}",
             'order': next_order,
             'source_column': source_col.get('column_name', ''),
-            'cascaded': True
+            'cascaded': True,
+            # New fields (columns I-M)
+            'source_column_name': source_col.get('column_name', ''),
+            'lookup_fields': '',
+            'etl_simple_trnasformation': '',
+            'ai_transformation_prompt': '',
+            'etl_ai_transformation': ''
         }
     
     def _create_dimension_keys(self, upstream_artifact: pd.Series, target_artifact: pd.Series, 
@@ -1225,7 +1241,13 @@ class ColumnCascadingEngine:
             'column_comment': f'Surrogate key for {upstream_name} dimension',
             'order': 1,
             'source_column': f'{upstream_name}_SK',
-            'cascaded': True
+            'cascaded': True,
+            # New fields (columns I-M)
+            'source_column_name': f'dim_{upstream_name}_SK',
+            'lookup_fields': '',
+            'etl_simple_trnasformation': '',
+            'ai_transformation_prompt': '',
+            'etl_ai_transformation': ''
         }
         
         # Create BK field
@@ -1238,7 +1260,13 @@ class ColumnCascadingEngine:
             'column_comment': f'Business key for {upstream_name} dimension',
             'order': 2,
             'source_column': f'{upstream_name}_BK',
-            'cascaded': True
+            'cascaded': True,
+            # New fields (columns I-M)
+            'source_column_name': f'dim_{upstream_name}_BK',
+            'lookup_fields': '',
+            'etl_simple_trnasformation': '',
+            'ai_transformation_prompt': '',
+            'etl_ai_transformation': ''
         }
         
         return sk_col, bk_col
@@ -1258,7 +1286,13 @@ class ColumnCascadingEngine:
             'column_comment': f'CDC timestamp from {upstream_stage} stage',
             'order': self._get_next_column_order(target_artifact['artifact_id']),
             'source_column': cdc_column_name,
-            'cascaded': True
+            'cascaded': True,
+            # New fields (columns I-M)
+            'source_column_name': cdc_column_name,
+            'lookup_fields': '',
+            'etl_simple_trnasformation': '',
+            'ai_transformation_prompt': '',
+            'etl_ai_transformation': ''
         }
     
     def _create_technical_columns(self, stage: str, target_artifact: pd.Series, 
@@ -1281,7 +1315,13 @@ class ColumnCascadingEngine:
                     'column_comment': f'Technical column for {stage} stage',
                     'order': self._get_next_column_order(target_artifact['artifact_id']),
                     'source_column': tech_col_config['column_name'],
-                    'cascaded': True
+                    'cascaded': True,
+                    # New fields (columns I-M)
+                    'source_column_name': tech_col_config['column_name'],
+                    'lookup_fields': '',
+                    'etl_simple_trnasformation': '',
+                    'ai_transformation_prompt': '',
+                    'etl_ai_transformation': ''
                 }
                 tech_columns.append(tech_col)
         
