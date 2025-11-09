@@ -186,6 +186,7 @@ class WorkbenchSetupManager:
         Structure matches workbench requirements - DO NOT CHANGE WITHOUT PERMISSION."""
         
         # Define column structure for columns sheet - exact order as specified
+        # Updated structure with new fields (columns L-P) - moved after column_group and column_comment
         columns_columns = [
             'stage_id',
             'stage_name',
@@ -197,7 +198,12 @@ class WorkbenchSetupManager:
             'order',
             'column_business_name',
             'column_group',
-            'column_comment'
+            'column_comment',
+            'source_column_name',           # New field (column L)
+            'lookup_fields',                # New field (column M)
+            'etl_simple_trnasformation',    # New field (column N)
+            'ai_transformation_prompt',     # New field (column O)
+            'etl_ai_transformation'         # New field (column P)
         ]
         
         # Return empty DataFrame with just the column structure
@@ -287,24 +293,16 @@ class WorkbenchSetupManager:
         return pd.DataFrame(stages_data)
 
     def _create_config_settings_sheet(self) -> pd.DataFrame:
-        """Create conf_2_technical_columns configuration sheet based on real configuration structure."""
+        """Create conf_2_technical_columns configuration sheet with simplified structure: stage_id, column_name, data_type, group, order."""
         tech_columns_data = {
             'stage_id': ['s1', 's1', 's1', 's1', 's1', 's2', 's2', 's2', 's3', 's3', 's4'],
-            'stage_name': ['1_bronze', '1_bronze', '1_bronze', '1_bronze', '1_bronze', 
-                          '2_silver', '2_silver', '2_silver', '3_gold', '3_gold', '4_mart'],
             'column_name': ['__SourceSystem', '__SourceFileName', '__SourceFilePath', '__LoadDate', '__PartitionDate',
                            '__IsActive', '__ValidFrom', '__ValidTo', '__BusinessKey', '__EffectiveDate', '__LastUpdated'],
             'data_type': ['STRING', 'STRING', 'STRING', 'TIMESTAMP', 'DATE',
                          'BOOLEAN', 'TIMESTAMP', 'TIMESTAMP', 'STRING', 'TIMESTAMP', 'TIMESTAMP'],
-            'include_in_tech_fields': [True, True, True, True, True, True, True, True, True, True, True],
-            'take_to_next_level': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-            'artifact_type_specific': ['all', 'all', 'all', 'all', 'all', 'all', 'scd2', 'scd2', 'all', 'all', 'all'],
-            'description': [
-                'Source system identifier', 'Original source file name', 'Source file path',
-                'Load timestamp', 'Partition date for optimization', 'Record active flag',
-                'Valid from timestamp', 'Valid to timestamp', 'Business key identifier',
-                'Business effective date', 'Last updated timestamp'
-            ]
+            'group': ['technical', 'technical', 'technical', 'technical', 'technical',
+                     'technical', 'technical', 'technical', 'technical', 'technical', 'technical'],
+            'order': [1, 2, 3, 4, 5, 1, 2, 3, 1, 2, 1]
         }
         return pd.DataFrame(tech_columns_data)
 
